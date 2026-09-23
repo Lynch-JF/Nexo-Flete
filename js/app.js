@@ -1,9 +1,9 @@
 (function () {
   const API = window.SUJUMI.API, K = 'sujumi_token', U = 'sujumi_usuario';
   const token = localStorage.getItem(K);
-  if (!token) { window.S = null; location.replace('sujumi-login.html'); return; }
+  if (!token) { window.S = null; location.replace('index.html'); return; }
   let user = null; try { user = JSON.parse(localStorage.getItem(U)); } catch (e) {}
-  const logout = () => { localStorage.removeItem(K); localStorage.removeItem(U); location.replace('sujumi-login.html'); };
+  const logout = () => { localStorage.removeItem(K); localStorage.removeItem(U); location.replace('index.html'); };
   async function api(path, o = {}) {
     const h = { Authorization: 'Bearer ' + token };
     if (o.body) { h['Content-Type'] = 'application/json'; o = { ...o, body: JSON.stringify(o.body) }; }
