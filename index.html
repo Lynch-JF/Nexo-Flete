@@ -1,9 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Nexo Flete · Registrar viaje</title>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Nexo Flete · Iniciar sesión</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -18,7 +14,7 @@
     --secondary:#64748B;
     --border:#E2E8F0;
 
-    --primary-tint:#0F766E14;
+    --primary-tint:#0F766E1a;
     --danger:#B45309;
     --danger-tint:#B450391a;
     --good:#0F766E;
@@ -37,356 +33,37 @@
     padding-bottom:env(safe-area-inset-bottom,0px);
   }
 
-  *{box-sizing:inherit;}
-  html{scroll-padding-top:env(safe-area-inset-top,0px);}
-  html,body{height:100%;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:var(--font-body);
-    -webkit-font-smoothing:antialiased;
-  }
-  a{color:inherit;}
-  button{font-family:inherit;}
-  input, select, textarea{font-family:inherit;}
-
-  .app{display:flex; min-height:100vh;}
-
-  /* ---------- Sidebar (shared) ---------- */
-  .sidebar{
-    width:248px; flex:0 0 248px;
-    background:var(--sidebar);
-    padding:24px 16px calc(20px + env(safe-area-inset-bottom,0px));
-    display:flex; flex-direction:column;
-    position:sticky; top:0; height:100vh;
-  }
-  .brand{display:flex; align-items:center; gap:10px; padding:4px 8px 28px;}
-  .brand-mark{
-    width:32px; height:32px; border-radius:8px;
-    background:linear-gradient(155deg, var(--primary) 0%, #0B4F49 100%);
-    display:flex; align-items:center; justify-content:center;
-    font-family:var(--font-display); font-weight:700; font-size:15px; color:#fff; flex:none;
-  }
-  .brand-name{font-family:var(--font-display); font-weight:600; font-size:17px; color:#fff;}
-  .brand-sub{font-size:11px; color:var(--sidebar-text-dim); margin-top:1px;}
-  .nav-group-label{font-size:11px; color:var(--sidebar-text-dim); padding:14px 12px 6px; font-weight:600;}
-  nav.primary-nav{display:flex; flex-direction:column; gap:2px;}
-  .nav-item{
-    display:flex; align-items:center; gap:11px;
-    padding:9px 12px; border-radius:8px;
-    font-size:13.5px; color:var(--sidebar-text); text-decoration:none; font-weight:500;
-    transition:background .12s ease, color .12s ease;
-  }
-  .nav-item:hover{background:#1E293B; color:#fff;}
-  .nav-item.active{background:var(--sidebar-active-bg); color:var(--sidebar-active-text);}
-  .nav-item svg{flex:none; opacity:0.9;}
-  .sidebar-footer{margin-top:auto; padding-top:16px; border-top:1px solid #1E293B;}
-  .user-chip{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px;}
-  .user-avatar{width:30px; height:30px; border-radius:50%; background:#1E293B; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#fff; flex:none;}
-  .user-name{font-size:13px; color:#fff; font-weight:600;}
-  .user-role{font-size:11.5px; color:var(--sidebar-text-dim);}
-
-  /* ---------- Main ---------- */
-  .main{flex:1; min-width:0; padding:28px 36px 80px;}
-
-  .breadcrumb{
-    font-size:12.5px; color:var(--secondary); margin-bottom:10px;
-    display:flex; align-items:center; gap:6px;
-  }
-  .breadcrumb span.current{color:var(--text); font-weight:600;}
-
-  .topbar{
-    display:flex; align-items:flex-start; justify-content:space-between;
-    gap:24px; margin-bottom:24px; flex-wrap:wrap;
-  }
-  .page-title{font-family:var(--font-display); font-size:26px; font-weight:600; margin:0 0 4px; letter-spacing:-0.01em;}
-  .page-sub{color:var(--secondary); font-size:13.5px; margin:0;}
-  .topbar-actions{display:flex; gap:10px; align-items:center;}
-
-  .btn{
-    display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer;
-    font-size:13.5px; font-weight:600; border-radius:8px; padding:9px 16px;
-    transition:background .12s ease, border-color .12s ease;
-  }
-  .btn-primary{background:var(--primary); color:#fff;}
-  .btn-primary:hover{background:var(--primary-hover);}
-  .btn-ghost{background:var(--card); color:var(--text); border:1px solid var(--border);}
-  .btn-ghost:hover{border-color:#CBD5E1;}
-  .btn-sm{padding:7px 12px; font-size:12.5px;}
-  .btn-block{width:100%; justify-content:center;}
-
-  .card{background:var(--card); border:1px solid var(--border); border-radius:12px;}
-
-  /* ---------- Layout: form + summary ---------- */
-  .form-layout{display:grid; grid-template-columns:1fr 340px; gap:20px; align-items:start;}
-
-  .section{padding:22px 24px; margin-bottom:18px;}
-  .section:last-child{margin-bottom:0;}
-  .section-head{margin-bottom:18px;}
-  .section-title{font-family:var(--font-display); font-size:16px; font-weight:600; margin:0 0 3px; display:flex; align-items:center; gap:9px;}
-  .section-num{
-    width:22px; height:22px; border-radius:6px; background:var(--primary-tint); color:var(--primary);
-    display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; font-family:var(--font-mono); flex:none;
-  }
-  .section-sub{font-size:12.5px; color:var(--secondary); margin:0 0 0 31px;}
-
-  .field-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px 16px;}
-  .field{display:flex; flex-direction:column; gap:6px;}
-  .field.full{grid-column:1 / -1;}
-  .field label{font-size:12.5px; font-weight:600; color:var(--text);}
-  .field .hint{font-size:11.5px; color:var(--secondary); font-weight:400;}
-
-  .input, select.input, textarea.input{
-    border:1px solid var(--border); border-radius:8px; padding:9px 12px;
-    font-size:13.5px; color:var(--text); background:#fff; width:100%;
-    outline:none; transition:border-color .12s ease, box-shadow .12s ease;
-  }
-  .input:focus{border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-tint);}
-  textarea.input{resize:vertical; min-height:64px; font-family:inherit;}
-
-  .input-suffix-wrap{position:relative;}
-  .input-suffix-wrap .input{padding-right:52px;}
-  .input-suffix{
-    position:absolute; right:1px; top:1px; bottom:1px;
-    display:flex; align-items:center; padding:0 12px;
-    font-size:12px; color:var(--secondary); font-weight:600;
-    background:#F1F5F9; border-left:1px solid var(--border);
-    border-radius:0 7px 7px 0;
-  }
-
-  /* Toggle: propio / externo */
-  .mode-toggle{display:inline-flex; border:1px solid var(--border); border-radius:8px; padding:3px; gap:2px;}
-  .mode-btn{
-    border:none; background:transparent; cursor:pointer;
-    padding:7px 16px; border-radius:6px; font-size:13px; font-weight:600; color:var(--secondary);
-  }
-  .mode-btn.active{background:var(--primary); color:#fff;}
-
-  .conditional-block{display:none;}
-  .conditional-block.visible{display:block;}
-
-  /* Pedidos asignados */
-  .assigned-table{width:100%; border-collapse:collapse; font-size:13px;}
-  .assigned-table th{
-    text-align:left; font-size:11px; font-weight:600; color:var(--secondary);
-    padding:0 10px 8px; border-bottom:1px solid var(--border);
-  }
-  .assigned-table td{padding:11px 10px; border-bottom:1px solid var(--border); vertical-align:middle;}
-  .assigned-table tr:last-child td{border-bottom:none;}
-  .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
-  .remove-btn{
-    border:none; background:transparent; color:var(--secondary); cursor:pointer;
-    width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center;
-  }
-  .remove-btn:hover{background:var(--danger-tint); color:var(--danger);}
-
-  .add-order-row{
-    display:flex; gap:10px; margin-top:14px; padding-top:14px; border-top:1px dashed var(--border);
-  }
-  .add-order-row .input{flex:1;}
-
-  /* ---------- Summary panel ---------- */
-  .summary-panel{position:sticky; top:24px;}
-  .summary-title{font-family:var(--font-display); font-size:15px; font-weight:600; margin:0 0 2px;}
-  .summary-sub{font-size:12px; color:var(--secondary); margin:0 0 16px;}
-
-  .summary-row{display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); font-size:13px;}
-  .summary-row:last-of-type{border-bottom:none;}
-  .summary-row .label{color:var(--secondary);}
-  .summary-row .value{font-family:var(--font-mono); font-weight:600;}
-
-  .summary-total{
-    display:flex; align-items:center; justify-content:space-between;
-    margin-top:14px; padding-top:14px; border-top:1px solid var(--border);
-  }
-  .summary-total .label{font-size:13.5px; font-weight:600;}
-  .summary-total .value{font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--primary);}
-
-  .delta-banner{
-    margin-top:14px; padding:10px 12px; border-radius:8px;
-    background:var(--danger-tint); color:var(--danger);
-    font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:8px;
-  }
-  .delta-banner.good{background:var(--primary-tint); color:var(--primary);}
-
-  .summary-actions{display:flex; flex-direction:column; gap:8px; margin-top:18px;}
-
-  /* ---------- Responsive ---------- */
-  @media (max-width: 1180px){
-    .form-layout{grid-template-columns:1fr;}
-    .summary-panel{position:static;}
-  }
-  @media (max-width: 860px){
-    .app{flex-direction:column;}
-    .sidebar{width:100%; flex:none; height:auto; position:relative; flex-direction:row; align-items:center; overflow-x:auto; padding:14px 16px;}
-    .brand{padding:0 16px 0 0;}
-    .nav-group-label{display:none;}
-    nav.primary-nav{flex-direction:row; gap:4px;}
-    .nav-item span{display:none;}
-    .sidebar-footer{display:none;}
-    .main{padding:20px 18px 60px;}
-    .field-grid{grid-template-columns:1fr;}
-  }
-  @media (max-width: 480px){
-    .page-title{font-size:22px;}
-  }
-.toast{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));background:#0F172A;color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;z-index:99;max-width:340px;box-shadow:0 8px 24px #0f172a40}.toast.err{background:#B45309}
-.empty{padding:26px 10px;text-align:center;color:var(--secondary);font-size:13px}
-.btn:disabled{opacity:.6;cursor:not-allowed}a.btn{text-decoration:none}
-@media(max-width:860px){.sidebar-footer{display:flex;margin-left:auto;border:0;padding:0}.sidebar-footer .user-chip{display:none}}
-</style>
-<script src="js/config.js"></script>
-<script src="js/app.js"></script>
-</head>
-<body>
-
-<div class="app">
-
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">NF</div>
-      <div>
-        <div class="brand-name">Nexo Flete</div>
-        <div class="brand-sub">Costeo &amp; Logística</div>
-      </div>
-    </div>
-
-    <div class="nav-group-label">Operación</div>
-    <nav class="primary-nav">
-      <a class="nav-item" href="sujumi-dashboard.html">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-        <span>Panel</span>
-      </a>
-      <a class="nav-item" href="sujumi-registrar-viaje.html">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l4-9 4 5 3-4 7 8"/></svg>
-        <span>Viajes</span>
-      </a>
-      <a class="nav-item" href="sujumi-comparacion.html">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
-        <span>Comparación</span>
-      </a>
-    </nav>
-
-    <div class="nav-group-label">Parámetros</div>
-    <nav class="primary-nav">
-      <a class="nav-item" href="sujumi-tarifas-parametros.html#hora-km">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17V7a2 2 0 0 1 2-2h9l5 5v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 21v-6h6v6"/></svg>
-        <span>Tarifas &amp; costos</span>
-      </a>
-      <a class="nav-item" href="sujumi-tarifas-parametros.html#vehiculos">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="9" width="15" height="8" rx="1.5"/><path d="M18 12h2.5l1.5 3v2h-4"/><circle cx="7.5" cy="19" r="1.6"/><circle cx="16.5" cy="19" r="1.6"/></svg>
-        <span>Vehículos</span>
-      </a>
-      <a class="nav-item" href="sujumi-tarifas-parametros.html#transportistas">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3H5a2 2 0 0 0-2 2v14l4-3h9a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/></svg>
-        <span>Transportistas</span>
-      </a>
-      </nav>
-
-    <div class="sidebar-footer">
-      <a class="nav-item" href="#" id="logout" style="margin-bottom:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Cerrar sesión</span></a>
-      <div class="user-chip">
-        <div class="user-avatar" id="uAv"></div>
-        <div>
-          <div class="user-name" id="uName"></div>
-          <div class="user-role" id="uRole"></div>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <main class="main">
-<div class="breadcrumb"><span>Viajes</span> / <span class="current">Registrar viaje</span></div>
-<div class="topbar"><div><h1 class="page-title">Registrar viaje</h1><p class="page-sub">Captura los datos reales de la operación para calcular el costo real y compararlo contra el estándar</p></div><div class="topbar-actions"><a class="btn btn-ghost" href="sujumi-dashboard.html">Cancelar</a></div></div>
-<div class="form-layout"><div>
-<section class="card section"><div class="section-head"><h2 class="section-title"><span class="section-num">1</span>Identificación del viaje</h2><p class="section-sub">Ruta, fecha y modalidad de transporte utilizada</p></div>
-<div class="field-grid">
-<div class="field"><label>Ruta / Zona</label><select class="input" id="zona"></select></div>
-<div class="field"><label>Fecha del viaje</label><input class="input" type="date" id="fecha"></div>
-<div class="field full"><label>Modalidad de transporte</label><div class="mode-toggle" id="modeToggle"><button type="button" class="mode-btn active" data-mode="propio">Transporte propio</button><button type="button" class="mode-btn" data-mode="externo">Transporte externo</button></div></div>
-<div class="field full conditional-block visible" data-block="propio"><div class="field-grid"><div class="field"><label>Vehículo</label><select class="input" id="veh"></select></div><div class="field"><label>Chofer</label><select class="input" id="chof"></select></div><div class="field full"><label>Ayudante <span class="hint">(opcional)</span></label><select class="input" id="ayud"></select></div></div></div>
-<div class="field full conditional-block" data-block="externo"><div class="field-grid">
-<div class="field"><label>Transportista</label><select class="input" id="trans"></select></div>
-<div class="field"><label>Modalidad de tarifa</label><select class="input" id="tmod"><option value="por_viaje">Por viaje</option><option value="por_bulto">Por bulto</option><option value="por_zona">Por zona</option><option value="por_peso">Por peso</option><option value="por_volumen">Por volumen</option><option value="especial">Tarifa especial</option></select></div>
-<div class="field full"><label>Tarifa aplicada</label><div class="input-suffix-wrap"><input class="input" id="tarifa" type="text" readonly><span class="input-suffix">RD$</span></div></div></div></div>
-</div></section>
-<section class="card section"><div class="section-head"><h2 class="section-title"><span class="section-num">2</span>Pedidos incluidos en la ruta</h2><p class="section-sub">El costo del viaje se distribuye entre estos pedidos según el método elegido</p></div>
-<table class="assigned-table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Bultos</th><th></th></tr></thead><tbody id="ped"></tbody></table>
-<div class="add-order-row"><input class="input" id="pcode" type="text" placeholder="Código del pedido (ej. PED-10432)"><button type="button" class="btn btn-ghost btn-sm" id="padd">+ Agregar</button></div>
-<div class="field" style="margin-top:14px"><label>Método de asignación</label><select class="input" id="met"><option value="bultos">Por bultos</option><option value="peso">Por peso</option><option value="volumen">Por volumen</option><option value="entregas">Por entregas (equitativo)</option><option value="km">Por km</option><option value="tiempo">Por tiempo</option></select></div></section>
-<section class="card section"><div class="section-head"><h2 class="section-title"><span class="section-num">3</span>Datos reales del viaje</h2><p class="section-sub">Lo que ocurrió realmente en ruta</p></div>
-<div class="field-grid">
-<div class="field"><label>Hora de salida</label><input class="input" type="time" id="hs"></div>
-<div class="field"><label>Hora de regreso</label><input class="input" type="time" id="hr"></div>
-<div class="field"><label>Kilómetros recorridos</label><div class="input-suffix-wrap"><input class="input" id="km" type="number" step="any" min="0" ><span class="input-suffix">km</span></div></div><div class="field"><label>Combustible consumido</label><div class="input-suffix-wrap"><input class="input" id="comb" type="number" step="any" min="0" ><span class="input-suffix">RD$</span></div></div><div class="field"><label>Peajes</label><div class="input-suffix-wrap"><input class="input" id="peajes" type="number" step="any" min="0" ><span class="input-suffix">RD$</span></div></div><div class="field"><label>Viáticos</label><div class="input-suffix-wrap"><input class="input" id="viat" type="number" step="any" min="0" ><span class="input-suffix">RD$</span></div></div><div class="field"><label>Horas extras</label><div class="input-suffix-wrap"><input class="input" id="hext" type="number" step="any" min="0" ><span class="input-suffix">hrs</span></div></div><div class="field"><label>Tiempo de preparación del pedido</label><div class="input-suffix-wrap"><input class="input" id="prep" type="number" step="any" min="0" ><span class="input-suffix">min</span></div></div>
-<div class="field full"><label>Incidencias <span class="hint">(opcional)</span></label><textarea class="input" id="inc" placeholder="Ej. Retraso por tráfico, devolución parcial, avería del vehículo…"></textarea></div>
-</div></section></div>
-<aside class="summary-panel card section"><h3 class="summary-title">Resumen del costo</h3><p class="summary-sub">Calculado con los datos ingresados y las tarifas vigentes</p>
-<div id="sumRows"></div><div class="summary-total"><span class="label">Costo real del viaje</span><span class="value" id="sumTot">RD$ 0</span></div>
-<div class="summary-actions"><button class="btn btn-primary btn-block" id="bReg">Registrar viaje</button><button class="btn btn-ghost btn-block" id="bDraft">Guardar como borrador</button></div></aside>
-</div></main>
-
-</div>
-
-
-
+  
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+.hero{background:var(--sidebar);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px}.mark{width:36px;height:36px;border-radius:9px;background:linear-gradient(155deg,var(--primary),#0B4F49);display:flex;align-items:center;justify-content:center;font:700 16px var(--font-display)}
+.bn{font:600 19px var(--font-display)}.bs{font-size:11.5px;color:var(--sidebar-text-dim)}
+.hero h2{font:600 34px/1.2 var(--font-display);letter-spacing:-.01em;margin:0 0 12px;max-width:420px}.hero p{color:var(--sidebar-text);font-size:14.5px;line-height:1.6;max-width:400px;margin:0}
+.hero small{color:var(--sidebar-text-dim);font-size:12px}
+.side{display:flex;align-items:center;justify-content:center;padding:32px}
+form{width:100%;max-width:360px}h1{font:600 26px var(--font-display);margin:0 0 6px}.sub{color:var(--secondary);font-size:13.5px;margin:0 0 26px}
+label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px}.f{margin-bottom:16px}
+input{width:100%;font:inherit;font-size:14px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text)}
+input:focus{outline:2px solid var(--primary-tint);border-color:var(--primary)}
+button{width:100%;border:0;border-radius:8px;background:var(--primary);color:#fff;font:600 14px var(--font-body);padding:12px;cursor:pointer}button:hover{background:var(--primary-hover)}button:disabled{opacity:.6;cursor:wait}
+.err{background:var(--danger-tint);color:var(--danger);font-size:13px;padding:10px 12px;border-radius:8px;margin-bottom:16px;display:none}
+@media(max-width:860px){.wrap{grid-template-columns:1fr}.hero{padding:28px;gap:24px}.hero h2{font-size:24px}.hero small{display:none}}
+</style><script src="js/config.js"></script></head><body>
+<div class="wrap"><div class="hero"><div class="brand"><div class="mark">NF</div><div><div class="bn">Nexo Flete</div><div class="bs">Costeo &amp; Logística</div></div></div>
+<div><h2>Sabe cuánto cuesta cada entrega, no solo cuánto vendiste.</h2><p>Registra los viajes, compara transporte propio vs. externo y mide el margen real de cada pedido después de logística.</p></div><small>© Nexo Flete</small></div>
+<div class="side"><form id="f"><h1>Iniciar sesión</h1><p class="sub">Ingresa con tu usuario del sistema de costeo</p>
+<div class="err" id="err"></div>
+<div class="f"><label for="u">Usuario</label><input id="u" autocomplete="username" required autofocus></div>
+<div class="f"><label for="p">Contraseña</label><input id="p" type="password" autocomplete="current-password" required></div>
+<button id="b">Entrar</button></form></div></div>
 <script>
-(async()=>{const S=window.S;if(!S)return;S.init();const {api,esc,money,toast}=S,$=id=>document.getElementById(id);
-
-let mode='propio',peds=[],costos={},tf=[];
-$('fecha').value=S.today();
-const opts=(a,v,l)=>a.map(x=>`<option value="${x[v]}">${esc(typeof l==='function'?l(x):x[l])}</option>`).join('');
-try{
-  const [zs,vs,ts,cs,tt,pe]=await Promise.all([api('/zonas'),api('/vehiculos'),api('/transportistas'),api('/costos-operacion'),api('/tarifas-transportista'),api('/personal').catch(()=>[])]);
-  $('zona').innerHTML=opts(zs,'id','nombre');
-  $('veh').innerHTML=opts(vs.filter(v=>v.activo!==false),'id',v=>`${v.nombre} · Placa ${v.placa}`);
-  $('trans').innerHTML=opts(ts,'id','nombre');
-  const by=re=>{const m=pe.filter(p=>re.test(p.rol||''));return m.length?m:pe};
-  $('chof').innerHTML=opts(by(/chofer/i),'id','nombre')||'<option value="">— Sin personal —</option>';
-  $('ayud').innerHTML='<option value="">— Sin ayudante —</option>'+opts(by(/ayudante|cargador/i),'id','nombre');
-  cs.forEach(c=>costos[c.tipo]=+c.valor);tf=tt;
-}catch(e){toast(e.message,'err')}
-const tarifa=()=>{const t=tf.filter(x=>x.transportista_id==$('trans').value&&x.modalidad===$('tmod').value);return t.find(x=>x.zona_id==$('zona').value)||t.find(x=>x.zona_id==null)};
-const n=id=>+$(id).value||0;
-function calc(){
-  const hrs=S.hours($('hs').value,$('hr').value);let rows,base=0;
-  if(mode==='propio'){rows=[[`Horas trabajadas (${hrs.toFixed(1)} h)`,hrs*(costos.hora||0)],[`Kilometraje (${n('km')} km)`,n('km')*(costos.km||0)],['Horas extra',n('hext')*(costos.hora_extra||0)],['Combustible',n('comb')]]}
-  else{const t=tarifa(),v=t?+t.valor:0,m=$('tmod').value;$('tarifa').value=t?v.toFixed(2):'Sin tarifa vigente';
-    base=m==='por_bulto'?v*peds.reduce((s,p)=>s+p.bultos,0):m==='por_peso'?v*peds.reduce((s,p)=>s+p.peso,0):m==='por_volumen'?v*peds.reduce((s,p)=>s+p.vol,0):v;rows=[['Tarifa del transportista',base]]}
-  rows.push(['Peajes',n('peajes')],['Viáticos',n('viat')]);
-  $('sumRows').innerHTML=rows.map(r=>`<div class="summary-row"><span class="label">${r[0]}</span><span class="value">${money(r[1])}</span></div>`).join('');
-  $('sumTot').textContent=money(rows.reduce((s,r)=>s+r[1],0));
-}
-function drawPeds(){$('ped').innerHTML=peds.map((p,i)=>`<tr><td class="mono">${esc(p.id)}</td><td>${esc(p.cliente)}</td><td class="mono">${p.bultos}</td><td><button type="button" class="remove-btn" title="Quitar" data-i="${i}">✕</button></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Aún no hay pedidos en la ruta</td></tr>';calc()}
-$('ped').onclick=e=>{const b=e.target.closest('[data-i]');if(b){peds.splice(+b.dataset.i,1);drawPeds()}};
-$('padd').onclick=async()=>{const c=$('pcode').value.trim();if(!c)return;
-  if(peds.some(p=>p.id===c))return toast('Ese pedido ya está en la ruta','err');
-  try{const p=await api('/pedidos/'+encodeURIComponent(c));peds.push({id:p.pedido_id,cliente:p.cliente||'—',bultos:+p.bultos||0,peso:+p.peso_kg||0,vol:+p.volumen_m3||0,raw:p});$('pcode').value='';drawPeds()}catch(e){toast(e.message,'err')}};
-$('pcode').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();$('padd').click()}};
-document.querySelectorAll('#modeToggle .mode-btn').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;
-  document.querySelectorAll('#modeToggle .mode-btn').forEach(x=>x.classList.toggle('active',x===b));
-  document.querySelectorAll('.conditional-block').forEach(k=>k.classList.toggle('visible',k.dataset.block===mode));calc()});
-document.querySelectorAll('input,select,textarea').forEach(e=>{e.addEventListener('input',calc);e.addEventListener('change',calc)});
-async function save(close){
-  if(!peds.length)return toast('Agrega al menos un pedido a la ruta','err');
-  if(close&&$('km').value==='')return toast('Indica los kilómetros recorridos','err');
-  if(mode==='propio'&&!$('veh').value)return toast('Selecciona un vehículo','err');
-  if(mode==='externo'&&!$('trans').value)return toast('Selecciona un transportista','err');
-  const bs=[$('bReg'),$('bDraft')];bs.forEach(b=>b.disabled=true);let v;
-  try{
-    const body={fecha:$('fecha').value,zona_id:+$('zona').value,modalidad:mode,metodo_asignacion:$('met').value};
-    if(mode==='propio'){body.vehiculo_id=+$('veh').value;if($('chof').value)body.chofer_id=+$('chof').value;if($('ayud').value)body.ayudante_id=+$('ayud').value}else{body.transportista_id=+$('trans').value;body.tarifa_modalidad=$('tmod').value}
-    v=await api('/viajes',{method:'POST',body});
-    for(const p of peds)await api(`/viajes/${v.id}/pedidos`,{method:'POST',body:{pedido_id:p.id,bultos:p.bultos,peso_kg:p.peso||null,volumen_m3:p.vol||null}});
-    if(close){const r=await api(`/viajes/${v.id}/cerrar`,{method:'PATCH',body:{hora_salida:$('hs').value||null,hora_regreso:$('hr').value||null,km_recorridos:n('km'),combustible_costo:n('comb'),peajes:n('peajes'),viaticos:n('viat'),horas_extra:n('hext'),tiempo_preparacion_min:n('prep')||null,incidencias:$('inc').value||null,metodo_asignacion:$('met').value}});
-      toast(`Viaje #${v.id} cerrado · costo real ${money(r.costo_real)}`+(v.costo_estandar!=null?` (estándar ${money(v.costo_estandar)})`:''))}
-    else toast(`Borrador guardado como viaje #${v.id} (planificado)`);
-    setTimeout(()=>location.href='sujumi-dashboard.html',1600);
-  }catch(e){toast((v?`Viaje #${v.id} creado pero falló: `:'')+e.message,'err');bs.forEach(b=>b.disabled=false)}
-}
-$('bReg').onclick=()=>save(true);$('bDraft').onclick=()=>save(false);drawPeds();
-})();
-</script>
-</body>
-</html>
+const API=window.SUJUMI.API,K='sujumi_token',$=id=>document.getElementById(id);
+const t=localStorage.getItem(K);
+if(t)fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+t}}).then(r=>{if(r.ok)location.replace('sujumi-dashboard.html');else localStorage.removeItem(K)}).catch(()=>{});
+$('f').onsubmit=async e=>{e.preventDefault();$('err').style.display='none';$('b').disabled=true;$('b').textContent='Entrando…';
+  try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario:$('u').value.trim(),password:$('p').value})});
+    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'No se pudo iniciar sesión');
+    localStorage.setItem(K,d.token);localStorage.setItem('sujumi_usuario',JSON.stringify(d.usuario));location.replace('sujumi-dashboard.html');
+  }catch(er){$('err').textContent=er instanceof TypeError?'No se pudo conectar con el servidor':er.message;$('err').style.display='block';$('b').disabled=false;$('b').textContent='Entrar'}};
+</script></body></html>
