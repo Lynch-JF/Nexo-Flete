@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Sujumi · Iniciar sesión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F8FAFC;
+    --card:#FFFFFF;
+    --sidebar:#0F172A;
+    --primary:#0F766E;
+    --primary-hover:#115E59;
+    --text:#0F172A;
+    --secondary:#64748B;
+    --border:#E2E8F0;
+
+    --primary-tint:#0F766E1a;
+    --danger:#B45309;
+    --danger-tint:#B450391a;
+    --good:#0F766E;
+
+    --sidebar-text:#CBD5E1;
+    --sidebar-text-dim:#64748B;
+    --sidebar-active-bg:#0F766E;
+    --sidebar-active-text:#FFFFFF;
+
+    --font-display:'Space Grotesk', system-ui, sans-serif;
+    --font-body:'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+
+  
+*{box-sizing:border-box}html,body{height:100%}body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:1fr 1fr;min-height:100vh}
+.hero{background:var(--sidebar);color:#fff;padding:48px;display:flex;flex-direction:column;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px}.mark{width:36px;height:36px;border-radius:9px;background:linear-gradient(155deg,var(--primary),#0B4F49);display:flex;align-items:center;justify-content:center;font:700 16px var(--font-display)}
+.bn{font:600 19px var(--font-display)}.bs{font-size:11.5px;color:var(--sidebar-text-dim)}
+.hero h2{font:600 34px/1.2 var(--font-display);letter-spacing:-.01em;margin:0 0 12px;max-width:420px}.hero p{color:var(--sidebar-text);font-size:14.5px;line-height:1.6;max-width:400px;margin:0}
+.hero small{color:var(--sidebar-text-dim);font-size:12px}
+.side{display:flex;align-items:center;justify-content:center;padding:32px}
+form{width:100%;max-width:360px}h1{font:600 26px var(--font-display);margin:0 0 6px}.sub{color:var(--secondary);font-size:13.5px;margin:0 0 26px}
+label{display:block;font-size:12.5px;font-weight:600;margin-bottom:6px}.f{margin-bottom:16px}
+input{width:100%;font:inherit;font-size:14px;padding:11px 13px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--text)}
+input:focus{outline:2px solid var(--primary-tint);border-color:var(--primary)}
+button{width:100%;border:0;border-radius:8px;background:var(--primary);color:#fff;font:600 14px var(--font-body);padding:12px;cursor:pointer}button:hover{background:var(--primary-hover)}button:disabled{opacity:.6;cursor:wait}
+.err{background:var(--danger-tint);color:var(--danger);font-size:13px;padding:10px 12px;border-radius:8px;margin-bottom:16px;display:none}
+@media(max-width:860px){.wrap{grid-template-columns:1fr}.hero{padding:28px;gap:24px}.hero h2{font-size:24px}.hero small{display:none}}
+</style><script src="js/config.js"></script></head><body>
+<div class="wrap"><div class="hero"><div class="brand"><div class="mark">SJ</div><div><div class="bn">Sujumi</div><div class="bs">Costeo &amp; Logística</div></div></div>
+<div><h2>Sabe cuánto cuesta cada entrega, no solo cuánto vendiste.</h2><p>Registra los viajes, compara transporte propio vs. externo y mide el margen real de cada pedido después de logística.</p></div><small>© Sujumi</small></div>
+<div class="side"><form id="f"><h1>Iniciar sesión</h1><p class="sub">Ingresa con tu usuario del sistema de costeo</p>
+<div class="err" id="err"></div>
+<div class="f"><label for="u">Usuario</label><input id="u" autocomplete="username" required autofocus></div>
+<div class="f"><label for="p">Contraseña</label><input id="p" type="password" autocomplete="current-password" required></div>
+<button id="b">Entrar</button></form></div></div>
+<script>
+const API=window.SUJUMI.API,K='sujumi_token',$=id=>document.getElementById(id);
+const t=localStorage.getItem(K);
+if(t)fetch(API+'/auth/me',{headers:{Authorization:'Bearer '+t}}).then(r=>{if(r.ok)location.replace('sujumi-dashboard.html');else localStorage.removeItem(K)}).catch(()=>{});
+$('f').onsubmit=async e=>{e.preventDefault();$('err').style.display='none';$('b').disabled=true;$('b').textContent='Entrando…';
+  try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({usuario:$('u').value.trim(),password:$('p').value})});
+    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'No se pudo iniciar sesión');
+    localStorage.setItem(K,d.token);localStorage.setItem('sujumi_usuario',JSON.stringify(d.usuario));location.replace('sujumi-dashboard.html');
+  }catch(er){$('err').textContent=er instanceof TypeError?'No se pudo conectar con el servidor':er.message;$('err').style.display='block';$('b').disabled=false;$('b').textContent='Entrar'}};
+</script></body></html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sujumi · Panel de Costeo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F8FAFC;
+    --card:#FFFFFF;
+    --sidebar:#0F172A;
+    --primary:#0F766E;
+    --primary-hover:#115E59;
+    --text:#0F172A;
+    --secondary:#64748B;
+    --border:#E2E8F0;
+
+    --primary-tint:#0F766E1a;
+    --danger:#B45309;
+    --danger-tint:#B450391a;
+    --good:#0F766E;
+
+    --sidebar-text:#CBD5E1;
+    --sidebar-text-dim:#64748B;
+    --sidebar-active-bg:#0F766E;
+    --sidebar-active-text:#FFFFFF;
+
+    --font-display:'Space Grotesk', system-ui, sans-serif;
+    --font-body:'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+
+  *{box-sizing:inherit;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{color:inherit;}
+
+  .app{
+    display:flex;
+    min-height:100vh;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:248px;
+    flex:0 0 248px;
+    background:var(--sidebar);
+    padding:24px 16px calc(20px + env(safe-area-inset-bottom,0px));
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:4px 8px 28px;
+  }
+
+  .brand-mark{
+    width:32px;
+    height:32px;
+    border-radius:8px;
+    background:linear-gradient(155deg, var(--primary) 0%, #0B4F49 100%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:15px;
+    color:#fff;
+    flex:none;
+  }
+
+  .brand-name{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:17px;
+    color:#fff;
+    letter-spacing:0.01em;
+  }
+
+  .brand-sub{
+    font-size:11px;
+    color:var(--sidebar-text-dim);
+    margin-top:1px;
+  }
+
+  .nav-group-label{
+    font-size:11px;
+    color:var(--sidebar-text-dim);
+    padding:14px 12px 6px;
+    font-weight:600;
+  }
+
+  nav.primary-nav{display:flex; flex-direction:column; gap:2px;}
+
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:11px;
+    padding:9px 12px;
+    border-radius:8px;
+    font-size:13.5px;
+    color:var(--sidebar-text);
+    text-decoration:none;
+    font-weight:500;
+    transition:background .12s ease, color .12s ease;
+  }
+  .nav-item:hover{background:#1E293B; color:#fff;}
+  .nav-item.active{background:var(--sidebar-active-bg); color:var(--sidebar-active-text);}
+  .nav-item svg{flex:none; opacity:0.9;}
+
+  .sidebar-footer{
+    margin-top:auto;
+    padding-top:16px;
+    border-top:1px solid #1E293B;
+  }
+
+  .user-chip{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:8px 10px;
+    border-radius:8px;
+  }
+  .user-avatar{
+    width:30px; height:30px; border-radius:50%;
+    background:#1E293B;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:600; color:#fff;
+    flex:none;
+  }
+  .user-name{font-size:13px; color:#fff; font-weight:600;}
+  .user-role{font-size:11.5px; color:var(--sidebar-text-dim);}
+
+  /* ---------- Main ---------- */
+  .main{
+    flex:1;
+    min-width:0;
+    padding:28px 36px 60px;
+  }
+
+  .topbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:24px;
+    margin-bottom:26px;
+    flex-wrap:wrap;
+  }
+
+  .page-title{
+    font-family:var(--font-display);
+    font-size:26px;
+    font-weight:600;
+    margin:0 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .page-sub{
+    color:var(--secondary);
+    font-size:13.5px;
+    margin:0;
+  }
+
+  .topbar-actions{display:flex; gap:10px; align-items:center;}
+
+  .date-pill{
+    display:flex; align-items:center; gap:8px;
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:8px 14px;
+    font-size:13px;
+    color:var(--secondary);
+    font-weight:500;
+  }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    border:none; cursor:pointer;
+    font-family:var(--font-body);
+    font-size:13.5px;
+    font-weight:600;
+    border-radius:8px;
+    padding:9px 16px;
+    transition:background .12s ease, box-shadow .12s ease;
+  }
+  .btn-primary{background:var(--primary); color:#fff;}
+  .btn-primary:hover{background:var(--primary-hover);}
+  .btn-ghost{background:var(--card); color:var(--text); border:1px solid var(--border);}
+  .btn-ghost:hover{border-color:#CBD5E1;}
+
+  /* ---------- KPI row ---------- */
+  .kpi-row{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:16px;
+    margin-bottom:22px;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+  }
+
+  .kpi{
+    padding:18px 20px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .kpi-top{display:flex; align-items:center; justify-content:space-between;}
+  .kpi-label{font-size:12.5px; color:var(--secondary); font-weight:600;}
+  .kpi-icon{
+    width:30px; height:30px; border-radius:7px;
+    background:var(--primary-tint);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--primary);
+    flex:none;
+  }
+  .kpi-value{
+    font-family:var(--font-mono);
+    font-size:26px;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  .kpi-delta{
+    font-size:12px;
+    font-weight:600;
+    display:inline-flex;
+    align-items:center;
+    gap:4px;
+    width:fit-content;
+  }
+  .kpi-delta.up{color:var(--danger);}
+  .kpi-delta.down{color:var(--good);}
+  .kpi-delta-context{color:var(--secondary); font-weight:500;}
+
+  /* ---------- Content grid ---------- */
+  .content-grid{
+    display:grid;
+    grid-template-columns:1.65fr 1fr;
+    gap:16px;
+    align-items:start;
+  }
+
+  .panel{padding:20px 22px 22px;}
+  .panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .panel-title{
+    font-family:var(--font-display);
+    font-size:16px;
+    font-weight:600;
+    margin:0;
+  }
+  .panel-title-sub{
+    font-size:12px;
+    color:var(--secondary);
+    margin-top:2px;
+  }
+
+  .link-btn{
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--primary);
+    text-decoration:none;
+  }
+  .link-btn:hover{color:var(--primary-hover);}
+
+  /* table */
+  .table-scroll{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:13px; min-width:640px;}
+  thead th{
+    text-align:left;
+    font-size:11px;
+    font-weight:600;
+    color:var(--secondary);
+    padding:0 10px 10px;
+    border-bottom:1px solid var(--border);
+    white-space:nowrap;
+  }
+  tbody td{
+    padding:12px 10px;
+    border-bottom:1px solid var(--border);
+    vertical-align:middle;
+    white-space:nowrap;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  .cell-order{font-weight:600;}
+  .cell-sub{display:block; font-size:11.5px; color:var(--secondary); font-weight:400; margin-top:1px;}
+  .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+
+  .tag{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:3px 9px;
+    border-radius:100px;
+    font-size:11.5px;
+    font-weight:600;
+  }
+  .tag-propio{background:#0F766E14; color:#0F766E;}
+  .tag-externo{background:#64748B17; color:#475569;}
+
+  .delta-good{color:var(--good); font-weight:600;}
+  .delta-bad{color:var(--danger); font-weight:600;}
+
+  .bar-track{
+    width:64px; height:6px; border-radius:100px;
+    background:var(--border);
+    overflow:hidden;
+    display:inline-block;
+    vertical-align:middle;
+  }
+  .bar-fill{height:100%; background:var(--primary); border-radius:100px;}
+
+  /* side panels */
+  .stack-gap{display:flex; flex-direction:column; gap:16px;}
+
+  .compare-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:11px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .compare-row:last-child{border-bottom:none;}
+  .compare-label{font-size:13px; font-weight:500;}
+  .compare-values{display:flex; align-items:baseline; gap:8px;}
+  .compare-propio{font-family:var(--font-mono); font-size:13.5px; font-weight:600; color:var(--primary);}
+  .compare-externo{font-family:var(--font-mono); font-size:13.5px; font-weight:600; color:var(--secondary);}
+  .vs-divider{font-size:11px; color:var(--secondary);}
+
+  .legend-row{display:flex; align-items:center; gap:16px; margin-top:14px; font-size:12px; color:var(--secondary);}
+  .legend-dot{width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px;}
+
+  .alert-item{
+    display:flex; gap:10px;
+    padding:12px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .alert-item:last-child{border-bottom:none;}
+  .alert-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--danger);
+    margin-top:5px;
+    flex:none;
+  }
+  .alert-title{font-size:13px; font-weight:600;}
+  .alert-desc{font-size:12px; color:var(--secondary); margin-top:2px; line-height:1.5;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1180px){
+    .kpi-row{grid-template-columns:repeat(2, 1fr);}
+    .content-grid{grid-template-columns:1fr;}
+  }
+
+  @media (max-width: 860px){
+    .app{flex-direction:column;}
+    .sidebar{
+      width:100%; flex:none; height:auto; position:relative;
+      flex-direction:row; align-items:center; overflow-x:auto;
+      padding:14px 16px;
+    }
+    .brand{padding:0 16px 0 0;}
+    .nav-group-label{display:none;}
+    nav.primary-nav{flex-direction:row; gap:4px;}
+    .nav-item span{display:none;}
+    .sidebar-footer{display:none;}
+    .main{padding:20px 18px 40px;}
+    .kpi-row{grid-template-columns:1fr 1fr;}
+  }
+
+  @media (max-width: 480px){
+    .kpi-row{grid-template-columns:1fr;}
+    .page-title{font-size:22px;}
+  }
+.toast{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));background:#0F172A;color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;z-index:99;max-width:340px;box-shadow:0 8px 24px #0f172a40}.toast.err{background:#B45309}
+.empty{padding:26px 10px;text-align:center;color:var(--secondary);font-size:13px}
+.btn:disabled{opacity:.6;cursor:not-allowed}a.btn{text-decoration:none}
+@media(max-width:860px){.sidebar-footer{display:flex;margin-left:auto;border:0;padding:0}.sidebar-footer .user-chip{display:none}}
+</style>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">SJ</div>
+      <div>
+        <div class="brand-name">Sujumi</div>
+        <div class="brand-sub">Costeo &amp; Logística</div>
+      </div>
+    </div>
+
+    <div class="nav-group-label">Operación</div>
+    <nav class="primary-nav">
+      <a class="nav-item" href="sujumi-dashboard.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span>Panel</span>
+      </a>
+      <a class="nav-item" href="sujumi-registrar-viaje.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l4-9 4 5 3-4 7 8"/></svg>
+        <span>Viajes</span>
+      </a>
+      <a class="nav-item" href="sujumi-comparacion.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+        <span>Comparación</span>
+      </a>
+    </nav>
+
+    <div class="nav-group-label">Parámetros</div>
+    <nav class="primary-nav">
+      <a class="nav-item" href="sujumi-tarifas-parametros.html#hora-km">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17V7a2 2 0 0 1 2-2h9l5 5v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 21v-6h6v6"/></svg>
+        <span>Tarifas &amp; costos</span>
+      </a>
+      <a class="nav-item" href="sujumi-tarifas-parametros.html#vehiculos">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="9" width="15" height="8" rx="1.5"/><path d="M18 12h2.5l1.5 3v2h-4"/><circle cx="7.5" cy="19" r="1.6"/><circle cx="16.5" cy="19" r="1.6"/></svg>
+        <span>Vehículos</span>
+      </a>
+      <a class="nav-item" href="sujumi-tarifas-parametros.html#transportistas">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3H5a2 2 0 0 0-2 2v14l4-3h9a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/></svg>
+        <span>Transportistas</span>
+      </a>
+      </nav>
+
+    <div class="sidebar-footer">
+      <a class="nav-item" href="#" id="logout" style="margin-bottom:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Cerrar sesión</span></a>
+      <div class="user-chip">
+        <div class="user-avatar" id="uAv"></div>
+        <div>
+          <div class="user-name" id="uName"></div>
+          <div class="user-role" id="uRole"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+<div class="topbar"><div><h1 class="page-title">Panel de Costeo</h1><p class="page-sub">Costo real de operación y rentabilidad de pedidos, actualizado en el día</p></div>
+<div class="topbar-actions"><div class="date-pill"><input id="fecha" type="date" style="border:0;background:none;font:inherit;color:inherit"></div><a class="btn btn-primary" href="sujumi-registrar-viaje.html">+ Registrar viaje</a></div></div>
+<div class="kpi-row" id="kpis"></div>
+<div class="content-grid">
+<section class="card panel"><div class="panel-head"><div><h2 class="panel-title">Viajes del día — estándar vs. real</h2><p class="panel-title-sub">Costo proyectado contra el costo registrado tras el viaje</p></div></div>
+<div class="table-scroll"><table><thead><tr><th>Viaje</th><th>Transporte</th><th>Costo estándar</th><th>Costo real</th><th>Diferencia</th><th>Estado</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<div class="stack-gap">
+<section class="card panel"><div class="panel-head"><div><h2 class="panel-title">Propio vs. externo</h2><p class="panel-title-sub" id="cmpSub"></p></div></div><div id="cmp"></div><div class="legend-row"><span><span class="legend-dot" style="background:var(--primary)"></span>Propio</span><span><span class="legend-dot" style="background:var(--secondary)"></span>Externo</span></div></section>
+<section class="card panel"><div class="panel-head"><div><h2 class="panel-title">Alertas de desviación</h2><p class="panel-title-sub">Costo real por encima del estándar</p></div></div><div id="alerts"></div></section>
+</div></div></main>
+
+</div>
+
+<script>
+(async()=>{const S=window.S;if(!S)return;S.init();const {api,esc,money,toast}=S,$=id=>document.getElementById(id);
+
+const f=$('fecha');f.value=S.today();
+const I={c:'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',b:'<path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/>',t:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M7 15h3"/>',k:'<circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/>'};
+const kpi=(l,ic,v,d,c)=>`<div class="card kpi"><div class="kpi-top"><span class="kpi-label">${l}</span><div class="kpi-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${I[ic]}</svg></div></div><div class="kpi-value">${v}</div><span class="kpi-delta ${c||''}">${d}</span></div>`;
+const tag=m=>`<span class="tag tag-${m==='externo'?'externo':'propio'}">${m==='externo'?'Externo':'Propio'}</span>`;
+let Z=[];
+async function load(){
+  const d=f.value,y=S.addDays(d,-1),m=d.slice(0,8)+'01';
+  $('rows').innerHTML='<tr><td colspan="6" class="empty">Cargando…</td></tr>';
+  try{
+    if(!Z.length)Z=await api('/zonas');
+    const [r,ry,vs,cp]=await Promise.all([api('/dashboard/resumen?fecha='+d),api('/dashboard/resumen?fecha='+y),api('/viajes?fecha='+d),api(`/comparacion?desde=${m}&hasta=${d}`)]);
+    const zn=id=>(Z.find(z=>z.id==id)||{}).nombre||'Zona #'+id;
+    const ct=+r.costo_total,cy=+ry.costo_total,pct=cy>0?(ct-cy)/cy*100:null;
+    const mg=+r.ingreso_total>0?+r.margen_post_logistica_total/+r.ingreso_total*100:null;
+    const open=vs.filter(v=>v.estado!=='cerrado').length;
+    $('kpis').innerHTML=kpi('Costo total del día','c',money(ct),pct===null?'<span class="kpi-delta-context">Sin datos de ayer</span>':`${pct>0?'▲':'▼'} ${Math.abs(pct).toFixed(1)}% <span class="kpi-delta-context">vs. ayer</span>`,pct>0?'up':'down')
+     +kpi('Pedidos costeados','b',r.pedidos_costeados,`${open} <span class="kpi-delta-context">viajes pendientes de cierre</span>`,'down')
+     +kpi('Costo promedio / pedido','t',money(r.promedio_por_pedido),'<span class="kpi-delta-context">Promedio del día</span>')
+     +kpi('Margen post-logística','k',mg===null?'—':mg.toFixed(1)+'%',`<span class="kpi-delta-context">${mg===null?'Sin ingresos cargados':'sobre '+money(r.ingreso_total)}</span>`);
+    $('rows').innerHTML=vs.map(v=>{const e=v.costo_estandar,c=v.costo_real,df=(e!=null&&c!=null)?c-e:null;
+      return `<tr><td><span class="cell-order">Viaje #${v.id}</span><span class="cell-sub">${esc(zn(v.zona_id))}</span></td><td>${tag(v.modalidad)}</td><td class="mono">${money(e)}</td><td class="mono">${money(c)}</td><td class="mono ${df===null?'':df>0?'delta-bad':'delta-good'}">${df===null?'—':(df>0?'+':'−')+money(Math.abs(df))}</td><td>${esc(v.estado)}</td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No hay viajes registrados para esta fecha</td></tr>';
+    const g=b=>cp.find(x=>!!x.es_externo===b)||{viajes:0,costo_total:0,costo_promedio:0};const a=g(false),b=g(true);
+    $('cmpSub').textContent=`Del ${S.fdate(m)} al ${S.fdate(d)} · viajes cerrados`;
+    const row=(l,x,y)=>`<div class="compare-row"><span class="compare-label">${l}</span><div class="compare-values"><span class="compare-propio">${x}</span><span class="vs-divider">vs</span><span class="compare-externo">${y}</span></div></div>`;
+    $('cmp').innerHTML=row('Viajes',a.viajes,b.viajes)+row('Costo total',money(a.costo_total),money(b.costo_total))+row('Costo promedio / viaje',money(a.costo_promedio),money(b.costo_promedio));
+    const al=vs.filter(v=>+v.costo_estandar>0&&+v.costo_real>+v.costo_estandar);
+    $('alerts').innerHTML=al.map(v=>`<div class="alert-item"><span class="alert-dot"></span><div><div class="alert-title">Viaje #${v.id} — ${((v.costo_real/v.costo_estandar-1)*100).toFixed(1)}% sobre estándar</div><div class="alert-desc">Real ${money(v.costo_real)} vs. estándar ${money(v.costo_estandar)} · ${esc(zn(v.zona_id))}</div></div></div>`).join('')||'<div class="empty">Sin desviaciones para esta fecha</div>';
+  }catch(e){toast(e.message,'err');$('rows').innerHTML=`<tr><td colspan="6" class="empty">${esc(e.message)}</td></tr>`}
+}
+f.onchange=load;load();
+})();
+</script>
+</body>
+</html>
