@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Nexo Flete · Panel de Costeo</title>
+<title>Nexo Flete · Comparación detallada</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
   :root{
     --bg:#F8FAFC;
@@ -18,10 +19,11 @@
     --secondary:#64748B;
     --border:#E2E8F0;
 
-    --primary-tint:#0F766E1a;
+    --primary-tint:#0F766E14;
     --danger:#B45309;
     --danger-tint:#B450391a;
     --good:#0F766E;
+    --secondary-tint:#64748B17;
 
     --sidebar-text:#CBD5E1;
     --sidebar-text-dim:#64748B;
@@ -36,363 +38,125 @@
     padding-top:env(safe-area-inset-top,0px);
     padding-bottom:env(safe-area-inset-bottom,0px);
   }
-
   *{box-sizing:inherit;}
   html{scroll-padding-top:env(safe-area-inset-top,0px);}
   html,body{height:100%;}
-  body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font-family:var(--font-body);
-    -webkit-font-smoothing:antialiased;
-  }
-
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); -webkit-font-smoothing:antialiased;}
   a{color:inherit;}
+  button, select, input{font-family:inherit;}
 
-  .app{
-    display:flex;
-    min-height:100vh;
-  }
+  .app{display:flex; min-height:100vh;}
 
   /* ---------- Sidebar ---------- */
   .sidebar{
-    width:248px;
-    flex:0 0 248px;
-    background:var(--sidebar);
+    width:248px; flex:0 0 248px; background:var(--sidebar);
     padding:24px 16px calc(20px + env(safe-area-inset-bottom,0px));
-    display:flex;
-    flex-direction:column;
-    position:sticky;
-    top:0;
-    height:100vh;
+    display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
   }
-
-  .brand{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:4px 8px 28px;
-  }
-
-  .brand-mark{
-    width:32px;
-    height:32px;
-    border-radius:8px;
-    background:linear-gradient(155deg, var(--primary) 0%, #0B4F49 100%);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-family:var(--font-display);
-    font-weight:700;
-    font-size:15px;
-    color:#fff;
-    flex:none;
-  }
-
-  .brand-name{
-    font-family:var(--font-display);
-    font-weight:600;
-    font-size:17px;
-    color:#fff;
-    letter-spacing:0.01em;
-  }
-
-  .brand-sub{
-    font-size:11px;
-    color:var(--sidebar-text-dim);
-    margin-top:1px;
-  }
-
-  .nav-group-label{
-    font-size:11px;
-    color:var(--sidebar-text-dim);
-    padding:14px 12px 6px;
-    font-weight:600;
-  }
-
+  .brand{display:flex; align-items:center; gap:10px; padding:4px 8px 28px;}
+  .brand-mark{width:32px; height:32px; border-radius:8px; background:linear-gradient(155deg, var(--primary) 0%, #0B4F49 100%); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:15px; color:#fff; flex:none;}
+  .brand-name{font-family:var(--font-display); font-weight:600; font-size:17px; color:#fff;}
+  .brand-sub{font-size:11px; color:var(--sidebar-text-dim); margin-top:1px;}
+  .nav-group-label{font-size:11px; color:var(--sidebar-text-dim); padding:14px 12px 6px; font-weight:600;}
   nav.primary-nav{display:flex; flex-direction:column; gap:2px;}
-
-  .nav-item{
-    display:flex;
-    align-items:center;
-    gap:11px;
-    padding:9px 12px;
-    border-radius:8px;
-    font-size:13.5px;
-    color:var(--sidebar-text);
-    text-decoration:none;
-    font-weight:500;
-    transition:background .12s ease, color .12s ease;
-  }
+  .nav-item{display:flex; align-items:center; gap:11px; padding:9px 12px; border-radius:8px; font-size:13.5px; color:var(--sidebar-text); text-decoration:none; font-weight:500; transition:background .12s ease, color .12s ease;}
   .nav-item:hover{background:#1E293B; color:#fff;}
   .nav-item.active{background:var(--sidebar-active-bg); color:var(--sidebar-active-text);}
   .nav-item svg{flex:none; opacity:0.9;}
-
-  .sidebar-footer{
-    margin-top:auto;
-    padding-top:16px;
-    border-top:1px solid #1E293B;
-  }
-
-  .user-chip{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    padding:8px 10px;
-    border-radius:8px;
-  }
-  .user-avatar{
-    width:30px; height:30px; border-radius:50%;
-    background:#1E293B;
-    display:flex; align-items:center; justify-content:center;
-    font-size:12px; font-weight:600; color:#fff;
-    flex:none;
-  }
+  .sidebar-footer{margin-top:auto; padding-top:16px; border-top:1px solid #1E293B;}
+  .user-chip{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px;}
+  .user-avatar{width:30px; height:30px; border-radius:50%; background:#1E293B; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#fff; flex:none;}
   .user-name{font-size:13px; color:#fff; font-weight:600;}
   .user-role{font-size:11.5px; color:var(--sidebar-text-dim);}
 
   /* ---------- Main ---------- */
-  .main{
-    flex:1;
-    min-width:0;
-    padding:28px 36px 60px;
-  }
+  .main{flex:1; min-width:0; padding:28px 36px 80px;}
 
-  .topbar{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:24px;
-    margin-bottom:26px;
-    flex-wrap:wrap;
-  }
+  .topbar{display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:20px; flex-wrap:wrap;}
+  .page-title{font-family:var(--font-display); font-size:26px; font-weight:600; margin:0 0 4px; letter-spacing:-0.01em;}
+  .page-sub{color:var(--secondary); font-size:13.5px; margin:0; max-width:56ch;}
 
-  .page-title{
-    font-family:var(--font-display);
-    font-size:26px;
-    font-weight:600;
-    margin:0 0 4px;
-    letter-spacing:-0.01em;
-  }
-  .page-sub{
-    color:var(--secondary);
-    font-size:13.5px;
-    margin:0;
-  }
+  .card{background:var(--card); border:1px solid var(--border); border-radius:12px;}
 
-  .topbar-actions{display:flex; gap:10px; align-items:center;}
+  /* Filters */
+  .filters{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px;}
+  .filter-field{display:flex; flex-direction:column; gap:5px;}
+  .filter-field label{font-size:11px; font-weight:600; color:var(--secondary);}
+  .input{border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; color:var(--text); background:#fff; outline:none;}
+  .input:focus{border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-tint);}
 
-  .date-pill{
-    display:flex; align-items:center; gap:8px;
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:8px;
-    padding:8px 14px;
-    font-size:13px;
-    color:var(--secondary);
-    font-weight:500;
-  }
-
-  .btn{
-    display:inline-flex; align-items:center; gap:8px;
-    border:none; cursor:pointer;
-    font-family:var(--font-body);
-    font-size:13.5px;
-    font-weight:600;
-    border-radius:8px;
-    padding:9px 16px;
-    transition:background .12s ease, box-shadow .12s ease;
-  }
-  .btn-primary{background:var(--primary); color:#fff;}
-  .btn-primary:hover{background:var(--primary-hover);}
-  .btn-ghost{background:var(--card); color:var(--text); border:1px solid var(--border);}
+  .btn{display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; font-size:13.5px; font-weight:600; border-radius:8px; padding:9px 16px;}
+  .btn-ghost{background:var(--card); color:var(--text); border:1px solid var(--border); align-self:flex-end;}
   .btn-ghost:hover{border-color:#CBD5E1;}
 
-  /* ---------- KPI row ---------- */
-  .kpi-row{
-    display:grid;
-    grid-template-columns:repeat(4, 1fr);
-    gap:16px;
-    margin-bottom:22px;
-  }
+  /* Head-to-head KPI cards */
+  .h2h-row{display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:20px;}
+  .h2h{padding:16px 18px;}
+  .h2h-label{font-size:12px; font-weight:600; color:var(--secondary); margin-bottom:12px;}
+  .h2h-sides{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .h2h-side{flex:1;}
+  .h2h-side .tag{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:100px; margin-bottom:6px;}
+  .tag-propio{background:var(--primary-tint); color:var(--primary);}
+  .tag-externo{background:var(--secondary-tint); color:var(--secondary);}
+  .h2h-value{font-family:var(--font-mono); font-size:19px; font-weight:700;}
+  .h2h-value.winner{color:var(--primary);}
+  .h2h-divider{width:1px; align-self:stretch; background:var(--border);}
 
-  .card{
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:12px;
-  }
-
-  .kpi{
-    padding:18px 20px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .kpi-top{display:flex; align-items:center; justify-content:space-between;}
-  .kpi-label{font-size:12.5px; color:var(--secondary); font-weight:600;}
-  .kpi-icon{
-    width:30px; height:30px; border-radius:7px;
-    background:var(--primary-tint);
-    display:flex; align-items:center; justify-content:center;
-    color:var(--primary);
-    flex:none;
-  }
-  .kpi-value{
-    font-family:var(--font-mono);
-    font-size:26px;
-    font-weight:600;
-    letter-spacing:-0.01em;
-  }
-  .kpi-delta{
-    font-size:12px;
-    font-weight:600;
-    display:inline-flex;
-    align-items:center;
-    gap:4px;
-    width:fit-content;
-  }
-  .kpi-delta.up{color:var(--danger);}
-  .kpi-delta.down{color:var(--good);}
-  .kpi-delta-context{color:var(--secondary); font-weight:500;}
-
-  /* ---------- Content grid ---------- */
-  .content-grid{
-    display:grid;
-    grid-template-columns:1.65fr 1fr;
-    gap:16px;
-    align-items:start;
-  }
+  /* Content grid */
+  .content-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:16px; align-items:start; margin-bottom:16px;}
 
   .panel{padding:20px 22px 22px;}
-  .panel-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:16px;
-  }
-  .panel-title{
-    font-family:var(--font-display);
-    font-size:16px;
-    font-weight:600;
-    margin:0;
-  }
-  .panel-title-sub{
-    font-size:12px;
-    color:var(--secondary);
-    margin-top:2px;
-  }
+  .panel-head{margin-bottom:16px;}
+  .panel-title{font-family:var(--font-display); font-size:16px; font-weight:600; margin:0 0 3px;}
+  .panel-title-sub{font-size:12px; color:var(--secondary); margin:0;}
 
-  .link-btn{
-    font-size:12.5px;
-    font-weight:600;
-    color:var(--primary);
-    text-decoration:none;
-  }
-  .link-btn:hover{color:var(--primary-hover);}
-
-  /* table */
   .table-scroll{overflow-x:auto;}
-  table{width:100%; border-collapse:collapse; font-size:13px; min-width:640px;}
-  thead th{
-    text-align:left;
-    font-size:11px;
-    font-weight:600;
-    color:var(--secondary);
-    padding:0 10px 10px;
-    border-bottom:1px solid var(--border);
-    white-space:nowrap;
-  }
-  tbody td{
-    padding:12px 10px;
-    border-bottom:1px solid var(--border);
-    vertical-align:middle;
-    white-space:nowrap;
-  }
+  table{width:100%; border-collapse:collapse; font-size:13px; min-width:480px;}
+  thead th{text-align:left; font-size:11px; font-weight:600; color:var(--secondary); padding:0 10px 10px; border-bottom:1px solid var(--border); white-space:nowrap;}
+  thead th.num, tbody td.num{text-align:right;}
+  tbody td{padding:11px 10px; border-bottom:1px solid var(--border); vertical-align:middle; white-space:nowrap;}
   tbody tr:last-child td{border-bottom:none;}
-  .cell-order{font-weight:600;}
-  .cell-sub{display:block; font-size:11.5px; color:var(--secondary); font-weight:400; margin-top:1px;}
   .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+  .cell-primary{font-weight:600;}
+  .win-badge{display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--primary); margin-left:7px; vertical-align:middle;}
 
-  .tag{
-    display:inline-flex; align-items:center; gap:5px;
-    padding:3px 9px;
-    border-radius:100px;
-    font-size:11.5px;
-    font-weight:600;
-  }
-  .tag-propio{background:#0F766E14; color:#0F766E;}
-  .tag-externo{background:#64748B17; color:#475569;}
+  .chart-wrap{height:260px; position:relative;}
 
-  .delta-good{color:var(--good); font-weight:600;}
-  .delta-bad{color:var(--danger); font-weight:600;}
+  /* Zonas recomendación */
+  .zone-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); gap:12px;}
+  .zone-row:last-child{border-bottom:none;}
+  .zone-name{font-size:13.5px; font-weight:600;}
+  .zone-reason{font-size:11.5px; color:var(--secondary); margin-top:2px;}
+  .zone-tag{flex:none;}
 
-  .bar-track{
-    width:64px; height:6px; border-radius:100px;
-    background:var(--border);
-    overflow:hidden;
-    display:inline-block;
-    vertical-align:middle;
-  }
-  .bar-fill{height:100%; background:var(--primary); border-radius:100px;}
+  /* Insight callouts */
+  .insight-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .insight-card{padding:18px 20px;}
+  .insight-head{display:flex; align-items:center; gap:9px; margin-bottom:10px;}
+  .insight-icon{width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; flex:none;}
+  .insight-icon.propio{background:var(--primary-tint); color:var(--primary);}
+  .insight-icon.externo{background:var(--secondary-tint); color:var(--secondary);}
+  .insight-title{font-family:var(--font-display); font-size:14.5px; font-weight:600; margin:0;}
+  .insight-list{margin:0; padding-left:18px; font-size:13px; color:var(--text); line-height:1.7;}
+  .insight-list li::marker{color:var(--secondary);}
 
-  /* side panels */
-  .stack-gap{display:flex; flex-direction:column; gap:16px;}
-
-  .compare-row{
-    display:flex; align-items:center; justify-content:space-between;
-    padding:11px 0;
-    border-bottom:1px solid var(--border);
-  }
-  .compare-row:last-child{border-bottom:none;}
-  .compare-label{font-size:13px; font-weight:500;}
-  .compare-values{display:flex; align-items:baseline; gap:8px;}
-  .compare-propio{font-family:var(--font-mono); font-size:13.5px; font-weight:600; color:var(--primary);}
-  .compare-externo{font-family:var(--font-mono); font-size:13.5px; font-weight:600; color:var(--secondary);}
-  .vs-divider{font-size:11px; color:var(--secondary);}
-
-  .legend-row{display:flex; align-items:center; gap:16px; margin-top:14px; font-size:12px; color:var(--secondary);}
-  .legend-dot{width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px;}
-
-  .alert-item{
-    display:flex; gap:10px;
-    padding:12px 0;
-    border-bottom:1px solid var(--border);
-  }
-  .alert-item:last-child{border-bottom:none;}
-  .alert-dot{
-    width:8px; height:8px; border-radius:50%;
-    background:var(--danger);
-    margin-top:5px;
-    flex:none;
-  }
-  .alert-title{font-size:13px; font-weight:600;}
-  .alert-desc{font-size:12px; color:var(--secondary); margin-top:2px; line-height:1.5;}
-
-  /* ---------- Responsive ---------- */
   @media (max-width: 1180px){
-    .kpi-row{grid-template-columns:repeat(2, 1fr);}
+    .h2h-row{grid-template-columns:repeat(2, 1fr);}
     .content-grid{grid-template-columns:1fr;}
+    .insight-grid{grid-template-columns:1fr;}
   }
-
   @media (max-width: 860px){
     .app{flex-direction:column;}
-    .sidebar{
-      width:100%; flex:none; height:auto; position:relative;
-      flex-direction:row; align-items:center; overflow-x:auto;
-      padding:14px 16px;
-    }
+    .sidebar{width:100%; flex:none; height:auto; position:relative; flex-direction:row; align-items:center; overflow-x:auto; padding:14px 16px;}
     .brand{padding:0 16px 0 0;}
     .nav-group-label{display:none;}
     nav.primary-nav{flex-direction:row; gap:4px;}
     .nav-item span{display:none;}
     .sidebar-footer{display:none;}
-    .main{padding:20px 18px 40px;}
-    .kpi-row{grid-template-columns:1fr 1fr;}
+    .main{padding:20px 18px 60px;}
+    .h2h-row{grid-template-columns:1fr;}
   }
-
   @media (max-width: 480px){
-    .kpi-row{grid-template-columns:1fr;}
     .page-title{font-size:22px;}
   }
 .toast{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));background:#0F172A;color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;z-index:99;max-width:340px;box-shadow:0 8px 24px #0f172a40}.toast.err{background:#B45309}
@@ -461,52 +225,76 @@
   </aside>
 
   <main class="main">
-<div class="topbar"><div><h1 class="page-title">Panel de Costeo</h1><p class="page-sub">Costo real de operación y rentabilidad de pedidos, actualizado en el día</p></div>
-<div class="topbar-actions"><div class="date-pill"><input id="fecha" type="date" style="border:0;background:none;font:inherit;color:inherit"></div><a class="btn btn-primary" href="sujumi-registrar-viaje.html">+ Registrar viaje</a></div></div>
-<div class="kpi-row" id="kpis"></div>
+<div class="topbar"><div><h1 class="page-title">Comparación detallada</h1><p class="page-sub">Transporte propio vs. externo — no para saber cuál es más barato en general, sino en qué condiciones conviene cada uno</p></div></div>
+<div class="filters"><div class="filter-field"><label>Desde</label><input class="input" type="date" id="desde"></div><div class="filter-field"><label>Hasta</label><input class="input" type="date" id="hasta"></div><div class="filter-field"><label>Zona</label><select class="input" id="zona"></select></div><button class="btn btn-ghost" id="go">Filtrar</button></div>
+<div class="h2h-row" id="h2h"></div>
 <div class="content-grid">
-<section class="card panel"><div class="panel-head"><div><h2 class="panel-title">Viajes del día — estándar vs. real</h2><p class="panel-title-sub">Costo proyectado contra el costo registrado tras el viaje</p></div></div>
-<div class="table-scroll"><table><thead><tr><th>Viaje</th><th>Transporte</th><th>Costo estándar</th><th>Costo real</th><th>Diferencia</th><th>Estado</th></tr></thead><tbody id="rows"></tbody></table></div></section>
-<div class="stack-gap">
-<section class="card panel"><div class="panel-head"><div><h2 class="panel-title">Propio vs. externo</h2><p class="panel-title-sub" id="cmpSub"></p></div></div><div id="cmp"></div><div class="legend-row"><span><span class="legend-dot" style="background:var(--primary)"></span>Propio</span><span><span class="legend-dot" style="background:var(--secondary)"></span>Externo</span></div></section>
-<section class="card panel"><div class="panel-head"><div><h2 class="panel-title">Alertas de desviación</h2><p class="panel-title-sub">Costo real por encima del estándar</p></div></div><div id="alerts"></div></section>
-</div></div></main>
+<section class="card panel"><div class="panel-head"><h2 class="panel-title">Tabla comparativa</h2><p class="panel-title-sub">Viajes cerrados del periodo · el punto marca el mejor valor</p></div><div class="table-scroll"><table><thead><tr><th>Indicador</th><th class="num">Propio</th><th class="num">Externo</th></tr></thead><tbody id="tb"></tbody></table></div></section>
+<section class="card panel"><div class="panel-head"><h2 class="panel-title">Costo promedio por viaje, por zona</h2><p class="panel-title-sub">Propio vs. externo</p></div><div class="chart-wrap"><canvas id="cc"></canvas></div></section>
+</div>
+<section class="card panel" style="margin-bottom:16px;"><div class="panel-head"><h2 class="panel-title">Modalidad recomendada por zona</h2><p class="panel-title-sub">Según el costo promedio por viaje en el periodo seleccionado</p></div><div id="zones"></div></section>
+<div class="insight-grid">
+      <section class="card insight-card">
+        <div class="insight-head">
+          <div class="insight-icon propio">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="9" width="15" height="8" rx="1.5"/><path d="M18 12h2.5l1.5 3v2h-4"/><circle cx="7.5" cy="19" r="1.6"/><circle cx="16.5" cy="19" r="1.6"/></svg>
+          </div>
+          <h3 class="insight-title">El transporte propio conviene cuando…</h3>
+        </div>
+        <ul class="insight-list">
+          <li>La ruta agrupa varios pedidos con buen volumen de bultos</li>
+          <li>La zona está cerca y permite más de un viaje por jornada</li>
+          <li>Se necesita control directo sobre horarios de entrega</li>
+        </ul>
+      </section>
+
+      <section class="card insight-card">
+        <div class="insight-head">
+          <div class="insight-icon externo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3H5a2 2 0 0 0-2 2v14l4-3h9a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/></svg>
+          </div>
+          <h3 class="insight-title">El transporte externo conviene cuando…</h3>
+        </div>
+        <ul class="insight-list">
+          <li>El pedido es único o de bajo volumen para una zona lejana</li>
+          <li>La flota propia ya está comprometida en otras rutas</li>
+          <li>La tarifa por bulto es más predecible que operar con capacidad ociosa</li>
+        </ul>
+      </section>
+    </div></main>
 
 </div>
+
+
 
 <script>
 (async()=>{const S=window.S;if(!S)return;S.init();const {api,esc,money,toast}=S,$=id=>document.getElementById(id);
 
-const f=$('fecha');f.value=S.today();
-const I={c:'<path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',b:'<path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/>',t:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M3 11h18M7 15h3"/>',k:'<circle cx="12" cy="12" r="9"/><path d="M8 12l2.5 2.5L16 9"/>'};
-const kpi=(l,ic,v,d,c)=>`<div class="card kpi"><div class="kpi-top"><span class="kpi-label">${l}</span><div class="kpi-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${I[ic]}</svg></div></div><div class="kpi-value">${v}</div><span class="kpi-delta ${c||''}">${d}</span></div>`;
-const tag=m=>`<span class="tag tag-${m==='externo'?'externo':'propio'}">${m==='externo'?'Externo':'Propio'}</span>`;
-let Z=[];
+const d=S.today();$('hasta').value=d;$('desde').value=d.slice(0,8)+'01';
+let Z=[],ch;
+try{Z=await api('/zonas')}catch(e){toast(e.message,'err')}
+$('zona').innerHTML='<option value="">Todas las zonas</option>'+Z.map(z=>`<option value="${z.id}">${esc(z.nombre)}</option>`).join('');
+const pick=r=>{const g=b=>r.find(x=>!!x.es_externo===b)||{viajes:0,costo_total:0,costo_promedio:0};return[g(false),g(true)]};
+const q=z=>`/comparacion?desde=${$('desde').value}&hasta=${$('hasta').value}${z?'&zona='+z:''}`;
+const card=(l,x,y,w)=>`<div class="card h2h"><div class="h2h-label">${l}</div><div class="h2h-sides"><div class="h2h-side"><span class="tag tag-propio">Propio</span><div class="h2h-value ${w===1?'winner':''}">${x}</div></div><div class="h2h-divider"></div><div class="h2h-side" style="text-align:right;"><span class="tag tag-externo">Externo</span><div class="h2h-value ${w===2?'winner':''}">${y}</div></div></div></div>`;
 async function load(){
-  const d=f.value,y=S.addDays(d,-1),m=d.slice(0,8)+'01';
-  $('rows').innerHTML='<tr><td colspan="6" class="empty">Cargando…</td></tr>';
   try{
-    if(!Z.length)Z=await api('/zonas');
-    const [r,ry,vs,cp]=await Promise.all([api('/dashboard/resumen?fecha='+d),api('/dashboard/resumen?fecha='+y),api('/viajes?fecha='+d),api(`/comparacion?desde=${m}&hasta=${d}`)]);
-    const zn=id=>(Z.find(z=>z.id==id)||{}).nombre||'Zona #'+id;
-    const ct=+r.costo_total,cy=+ry.costo_total,pct=cy>0?(ct-cy)/cy*100:null;
-    const mg=+r.ingreso_total>0?+r.margen_post_logistica_total/+r.ingreso_total*100:null;
-    const open=vs.filter(v=>v.estado!=='cerrado').length;
-    $('kpis').innerHTML=kpi('Costo total del día','c',money(ct),pct===null?'<span class="kpi-delta-context">Sin datos de ayer</span>':`${pct>0?'▲':'▼'} ${Math.abs(pct).toFixed(1)}% <span class="kpi-delta-context">vs. ayer</span>`,pct>0?'up':'down')
-     +kpi('Pedidos costeados','b',r.pedidos_costeados,`${open} <span class="kpi-delta-context">viajes pendientes de cierre</span>`,'down')
-     +kpi('Costo promedio / pedido','t',money(r.promedio_por_pedido),'<span class="kpi-delta-context">Promedio del día</span>')
-     +kpi('Margen post-logística','k',mg===null?'—':mg.toFixed(1)+'%',`<span class="kpi-delta-context">${mg===null?'Sin ingresos cargados':'sobre '+money(r.ingreso_total)}</span>`);
-    $('rows').innerHTML=vs.map(v=>{const e=v.costo_estandar,c=v.costo_real,df=(e!=null&&c!=null)?c-e:null;
-      return `<tr><td><span class="cell-order">Viaje #${v.id}</span><span class="cell-sub">${esc(zn(v.zona_id))}</span></td><td>${tag(v.modalidad)}</td><td class="mono">${money(e)}</td><td class="mono">${money(c)}</td><td class="mono ${df===null?'':df>0?'delta-bad':'delta-good'}">${df===null?'—':(df>0?'+':'−')+money(Math.abs(df))}</td><td>${esc(v.estado)}</td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No hay viajes registrados para esta fecha</td></tr>';
-    const g=b=>cp.find(x=>!!x.es_externo===b)||{viajes:0,costo_total:0,costo_promedio:0};const a=g(false),b=g(true);
-    $('cmpSub').textContent=`Del ${S.fdate(m)} al ${S.fdate(d)} · viajes cerrados`;
-    const row=(l,x,y)=>`<div class="compare-row"><span class="compare-label">${l}</span><div class="compare-values"><span class="compare-propio">${x}</span><span class="vs-divider">vs</span><span class="compare-externo">${y}</span></div></div>`;
-    $('cmp').innerHTML=row('Viajes',a.viajes,b.viajes)+row('Costo total',money(a.costo_total),money(b.costo_total))+row('Costo promedio / viaje',money(a.costo_promedio),money(b.costo_promedio));
-    const al=vs.filter(v=>+v.costo_estandar>0&&+v.costo_real>+v.costo_estandar);
-    $('alerts').innerHTML=al.map(v=>`<div class="alert-item"><span class="alert-dot"></span><div><div class="alert-title">Viaje #${v.id} — ${((v.costo_real/v.costo_estandar-1)*100).toFixed(1)}% sobre estándar</div><div class="alert-desc">Real ${money(v.costo_real)} vs. estándar ${money(v.costo_estandar)} · ${esc(zn(v.zona_id))}</div></div></div>`).join('')||'<div class="empty">Sin desviaciones para esta fecha</div>';
-  }catch(e){toast(e.message,'err');$('rows').innerHTML=`<tr><td colspan="6" class="empty">${esc(e.message)}</td></tr>`}
+    const [a,b]=pick(await api(q($('zona').value))),pa=+a.costo_promedio,pb=+b.costo_promedio,both=a.viajes>0&&b.viajes>0,w=both?(pa<pb?1:pb<pa?2:0):0;
+    $('h2h').innerHTML=card('Costo promedio por viaje',money(pa),money(pb),w)+card('Costo total',money(a.costo_total),money(b.costo_total))+card('Viajes cerrados',a.viajes,b.viajes);
+    const bd=k=>w===k?'<span class="win-badge"></span>':'';
+    $('tb').innerHTML=`<tr><td class="cell-primary">Viajes cerrados</td><td class="mono num">${a.viajes}</td><td class="mono num">${b.viajes}</td></tr><tr><td class="cell-primary">Costo total</td><td class="mono num">${money(a.costo_total)}</td><td class="mono num">${money(b.costo_total)}</td></tr><tr><td class="cell-primary">Costo promedio por viaje</td><td class="mono num">${money(pa)}${bd(1)}</td><td class="mono num">${money(pb)}${bd(2)}</td></tr>`;
+    const zr=await Promise.all(Z.map(z=>api(q(z.id)).then(pick)));
+    $('zones').innerHTML=Z.map((z,i)=>{const [x,y]=zr[i],px=+x.costo_promedio,py=+y.costo_promedio;let t,c,r;
+      if(x.viajes>0&&y.viajes>0){const p=px<=py;t=p?'Propio':'Externo';c=p?'propio':'externo';r=`Promedio por viaje: propio ${money(px)} (${x.viajes} viajes) vs. externo ${money(py)} (${y.viajes} viajes)`}
+      else if(x.viajes>0||y.viajes>0){const p=x.viajes>0;t=p?'Propio':'Externo';c=p?'propio':'externo';r=`Solo hay viajes ${p?'propios':'externos'} en el periodo; sin base de comparación`}
+      else{t='Sin datos';c='';r='Sin viajes cerrados en el periodo'}
+      return `<div class="zone-row"><div><div class="zone-name">${esc(z.nombre)}</div><div class="zone-reason">${r}</div></div><span class="zone-tag tag ${c?'tag-'+c:''}">${t}</span></div>`}).join('')||'<div class="empty">No hay zonas registradas</div>';
+    const st=getComputedStyle(document.documentElement),g=v=>st.getPropertyValue(v).trim();
+    ch&&ch.destroy();
+    ch=new Chart($('cc'),{type:'bar',data:{labels:Z.map(z=>z.nombre),datasets:[{label:'Propio',data:zr.map(r=>r[0].viajes>0?+r[0].costo_promedio:null),backgroundColor:g('--primary'),borderRadius:6,maxBarThickness:34},{label:'Externo',data:zr.map(r=>r[1].viajes>0?+r[1].costo_promedio:null),backgroundColor:g('--secondary'),borderRadius:6,maxBarThickness:34}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:g('--text'),boxWidth:10,font:{size:12}}}},scales:{x:{grid:{display:false},ticks:{color:g('--secondary')}},y:{beginAtZero:true,grid:{color:g('--border')},ticks:{color:g('--secondary')}}}}});
+  }catch(e){toast(e.message,'err')}
 }
-f.onchange=load;load();
+$('go').onclick=load;load();
 })();
 </script>
 </body>
