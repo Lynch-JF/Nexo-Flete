@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Sujumi · Tarifas &amp; Parámetros</title>
+<title>Nexo Flete · Tarifas &amp; Parámetros</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -180,9 +180,9 @@
 
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark">SJ</div>
+      <div class="brand-mark">NF</div>
       <div>
-        <div class="brand-name">Sujumi</div>
+        <div class="brand-name">Nexo Flete</div>
         <div class="brand-sub">Costeo &amp; Logística</div>
       </div>
     </div>
@@ -233,7 +233,7 @@
 
   <main class="main">
 <div class="topbar"><div><h1 class="page-title">Tarifas &amp; Parámetros</h1><p class="page-sub">Datos estables que alimentan el cálculo del costo. Cada cambio queda registrado con fecha de vigencia — el histórico nunca se modifica.</p></div></div>
-<div class="tabs" id="tabs"><button class="tab-btn" data-tab="hora-km">Costo por hora / km</button><button class="tab-btn" data-tab="vehiculos">Vehículos</button><button class="tab-btn" data-tab="transportistas">Transportistas externos</button><button class="tab-btn" data-tab="salarios">Salarios &amp; cargas laborales</button><button class="tab-btn" data-tab="zonas">Zonas &amp; rutas</button></div><div id="view"></div></main>
+<div class="tabs" id="tabs"><button class="tab-btn" data-tab="hora-km">Costo por hora / km</button><button class="tab-btn" data-tab="vehiculos">Vehículos</button><button class="tab-btn" data-tab="transportistas">Transportistas externos</button><button class="tab-btn" data-tab="salarios">Salarios &amp; cargas laborales</button><button class="tab-btn" data-tab="zonas">Zonas &amp; rutas</button><button class="tab-btn" data-tab="personal">Personal</button></div><div id="view"></div></main>
 
 </div>
 
@@ -245,7 +245,7 @@
 const adm=S.user&&S.user.rol==='admin_costeo';
 const MOD={por_viaje:'Por viaje',por_bulto:'Por bulto',por_zona:'Por zona',por_peso:'Por peso',por_volumen:'Por volumen',especial:'Tarifa especial'};
 const TIPO={hora:'Costo por hora',km:'Costo por kilómetro',hora_extra:'Costo por hora extra'};
-let Z=[],TR=[],cur=(location.hash||'#hora-km').slice(1);
+let Z=[],TR=[],RL=[],cur=(location.hash||'#hora-km').slice(1);
 const zn=id=>id==null?'Todas':(Z.find(z=>z.id==id)||{nombre:'#'+id}).nombre,tn=id=>(TR.find(t=>t.id==id)||{nombre:'#'+id}).nombre;
 const mins=m=>{m=+m;return m>=60?`${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}min`:m+'min'};
 const N=v=>`<td class="mono">${money(v)}</td>`,P=s=>`<td class="cell-primary">${s}</td>`;
@@ -254,6 +254,7 @@ const T={
 'vehiculos':{p:'/vehiculos',h:['Vehículo','Depreciación/mes','Seguro/mes','Mantenim. est./mes','Rendimiento'],c:r=>[P(`${esc(r.nombre)}<span class="cell-sub">Placa ${esc(r.placa)}</span>`),N(r.depreciacion_mensual),N(r.seguro_mensual),N(r.mantenimiento_estimado_mensual),`<td class="mono">${+r.rendimiento_km_gal} km/gal</td>`],x:{activo:true},f:{t:'Nuevo vehículo',fl:[['placa','Placa','text'],['nombre','Nombre del vehículo','text'],['depreciacion_mensual','Depreciación mensual','num','RD$'],['seguro_mensual','Seguro mensual','num','RD$'],['mantenimiento_estimado_mensual','Mantenimiento estimado mensual','num','RD$'],['rendimiento_km_gal','Rendimiento de combustible','num','km/gal']]}},
 'transportistas':{p:'/tarifas-transportista',h:['Transportista','Modalidad','Tarifa','Zona'],c:r=>[P(esc(tn(r.transportista_id))),`<td>${MOD[r.modalidad]||esc(r.modalidad)}</td>`,N(r.valor),`<td>${esc(zn(r.zona_id))}</td>`],f:{t:'Nueva tarifa de transportista',fl:[['transportista_id','Transportista','select',()=>[...TR.map(t=>[t.id,t.nombre]),['new','+ Nuevo transportista']]],['nuevo','Nombre del nuevo transportista','text'],['modalidad','Modalidad','select',Object.entries(MOD)],['zona_id','Zona','select',()=>[['','Todas las zonas'],...Z.map(z=>[z.id,z.nombre])]],['valor','Tarifa','num','RD$']]}},
 'salarios':{p:'/roles-laborales',h:['Rol','Salario mensual','Cargas laborales','Costo hora-hombre'],c:r=>[P(esc(r.rol)),N(r.salario_mensual),`<td class="mono">${+r.cargas_laborales_pct}%</td>`,N(r.costo_hora_hombre)],f:{t:'Nuevo valor de rol',fl:[['rol','Rol','text'],['salario_mensual','Salario mensual','num','RD$'],['cargas_laborales_pct','Cargas laborales','num','%']]}},
+'personal':{p:'/personal',nv:1,h:['Nombre','Rol','Estado'],c:r=>[P(esc(r.nombre)),`<td>${esc(r.rol||'—')}</td>`,`<td><span class="status-pill status-${r.activo?'vigente':'historico'}">${r.activo?'Activo':'Inactivo'}</span></td>`],f:{t:'Nuevo empleado',fl:[['nombre','Nombre','text'],['rol_laboral_id','Rol','select',()=>RL.map(r=>[r.id,r.rol])]]}},
 'zonas':{p:'/zonas',h:['Zona','Distancia estándar','Tiempo estándar'],c:r=>[P(esc(r.nombre)),`<td class="mono">${+r.distancia_estandar_km} km</td>`,`<td class="mono">${mins(r.tiempo_estandar_min)}</td>`],f:{t:'Nueva zona',fl:[['nombre','Nombre de la zona','text'],['distancia_estandar_km','Distancia estándar','num','km'],['tiempo_estandar_min','Tiempo estándar','num','min']]}}
 };
 const fld=([k,l,t,o])=>{let i;
@@ -264,12 +265,12 @@ async function render(){
   if(!T[cur])cur='hora-km';const d=T[cur];
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===cur));
   $('view').innerHTML='<div class="empty">Cargando…</div>';
-  let rows;try{[Z,TR]=await Promise.all([api('/zonas'),api('/transportistas?incluirInactivos=1')]);rows=await api(d.p+'/historial').catch(()=>api(d.p))}catch(e){$('view').innerHTML=`<div class="empty">${esc(e.message)}</div>`;return}
+  let rows;try{[Z,TR,RL]=await Promise.all([api('/zonas'),api('/transportistas?incluirInactivos=1'),api('/roles-laborales').catch(()=>[])]);rows=d.nv?await api(d.p+'?incluirInactivos=1'):await api(d.p+'/historial').catch(()=>api(d.p))}catch(e){$('view').innerHTML=`<div class="empty">${esc(e.message)}</div>`;return}
   const td=S.today(),f=d.f;
   const body=rows.map(r=>{const v=!r.vigente_hasta,pr=v&&String(r.vigente_desde).slice(0,10)>td,s=pr?'programado':v?'vigente':'historico';
-    return `<tr class="${v?'':'row-muted'}">${d.c(r).join('')}<td class="mono">${S.fdate(r.vigente_desde)}</td><td><span class="status-pill status-${s}">${pr?'Programado':v?'Vigente':'Histórico'}</span></td></tr>`}).join('')||'<tr><td colspan="9" class="empty">Sin registros</td></tr>';
+    return `<tr class="${v?'':'row-muted'}">${d.c(r).join('')}${d.nv?'':`<td class="mono">${S.fdate(r.vigente_desde)}</td><td><span class="status-pill status-${s}">${pr?'Programado':v?'Vigente':'Histórico'}</span></td>`}</tr>`}).join('')||'<tr><td colspan="9" class="empty">Sin registros</td></tr>';
   const form=adm?`<aside class="card panel side-panel"><h3 class="side-title">${f.t}</h3><p class="side-sub">La vigencia inicia hoy; el valor anterior se cierra automáticamente y el histórico no se modifica.</p><form id="frm">${f.fl.map(fld).join('')}<button class="btn btn-primary btn-block" style="margin-top:8px">Guardar</button></form></aside>`:`<aside class="card panel side-panel"><h3 class="side-title">Solo lectura</h3><p class="side-sub">Únicamente el rol admin_costeo puede modificar parámetros.</p></aside>`;
-  $('view').innerHTML=`<div class="layout"><section class="card panel"><div class="table-scroll"><table><thead><tr>${[...d.h,'Vigente desde','Estado'].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div></section>${form}</div>`;
+  $('view').innerHTML=`<div class="layout"><section class="card panel"><div class="table-scroll"><table><thead><tr>${(d.nv?d.h:[...d.h,'Vigente desde','Estado']).map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div></section>${form}</div>`;
   const fm=$('frm');if(!fm)return;
   const sel=fm.elements.transportista_id;if(sel)sel.onchange=()=>$('fNuevo').style.display=sel.value==='new'?'':'none';
   fm.onsubmit=async e=>{e.preventDefault();const fd=Object.fromEntries(new FormData(fm)),b=fm.querySelector('button');
@@ -278,7 +279,7 @@ async function render(){
       if(cur==='transportistas'){
         if(fd.transportista_id==='new'){if(!(fd.nuevo||'').trim())throw new Error('Escribe el nombre del transportista');fd.transportista_id=(await api('/transportistas',{method:'POST',body:{nombre:fd.nuevo.trim()}})).id}
         fd.transportista_id=+fd.transportista_id;fd.zona_id=fd.zona_id===''?null:+fd.zona_id}
-      delete fd.nuevo;await api(d.p,{method:'POST',body:{...fd,...(d.x||{})}});toast('Nueva vigencia guardada');render();
+      if(cur==='personal')fd.rol_laboral_id=+fd.rol_laboral_id;delete fd.nuevo;await api(d.p,{method:'POST',body:{...fd,...(d.x||{})}});toast('Nueva vigencia guardada');render();
     }catch(er){toast(er.message,'err');b.disabled=false}};
 }
 document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{location.hash=b.dataset.tab});
