@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nexo Flete · Rentabilidad de pedidos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F8FAFC;
+    --card:#FFFFFF;
+    --sidebar:#0F172A;
+    --primary:#0F766E;
+    --primary-hover:#115E59;
+    --text:#0F172A;
+    --secondary:#64748B;
+    --border:#E2E8F0;
+
+    --primary-tint:#0F766E14;
+    --danger:#B45309;
+    --danger-tint:#B450391a;
+    --good:#0F766E;
+    --secondary-tint:#64748B17;
+
+    --sidebar-text:#CBD5E1;
+    --sidebar-text-dim:#64748B;
+    --sidebar-active-bg:#0F766E;
+    --sidebar-active-text:#FFFFFF;
+
+    --font-display:'Space Grotesk', system-ui, sans-serif;
+    --font-body:'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, monospace;
+
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:inherit;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{height:100%;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:var(--font-body); -webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  button, select, input{font-family:inherit;}
+
+  .app{display:flex; min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    width:248px; flex:0 0 248px; background:var(--sidebar);
+    padding:24px 16px calc(20px + env(safe-area-inset-bottom,0px));
+    display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:4px 8px 28px;}
+  .brand-mark{width:32px; height:32px; border-radius:8px; background:linear-gradient(155deg, var(--primary) 0%, #0B4F49 100%); display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-weight:700; font-size:15px; color:#fff; flex:none;}
+  .brand-name{font-family:var(--font-display); font-weight:600; font-size:17px; color:#fff;}
+  .brand-sub{font-size:11px; color:var(--sidebar-text-dim); margin-top:1px;}
+  .nav-group-label{font-size:11px; color:var(--sidebar-text-dim); padding:14px 12px 6px; font-weight:600;}
+  nav.primary-nav{display:flex; flex-direction:column; gap:2px;}
+  .nav-item{display:flex; align-items:center; gap:11px; padding:9px 12px; border-radius:8px; font-size:13.5px; color:var(--sidebar-text); text-decoration:none; font-weight:500; transition:background .12s ease, color .12s ease;}
+  .nav-item:hover{background:#1E293B; color:#fff;}
+  .nav-item.active{background:var(--sidebar-active-bg); color:var(--sidebar-active-text);}
+  .nav-item svg{flex:none; opacity:0.9;}
+  .sidebar-footer{margin-top:auto; padding-top:16px; border-top:1px solid #1E293B;}
+  .user-chip{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px;}
+  .user-avatar{width:30px; height:30px; border-radius:50%; background:#1E293B; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:#fff; flex:none;}
+  .user-name{font-size:13px; color:#fff; font-weight:600;}
+  .user-role{font-size:11.5px; color:var(--sidebar-text-dim);}
+
+  /* ---------- Main ---------- */
+  .main{flex:1; min-width:0; padding:28px 36px 80px;}
+
+  .topbar{display:flex; align-items:flex-start; justify-content:space-between; gap:24px; margin-bottom:20px; flex-wrap:wrap;}
+  .page-title{font-family:var(--font-display); font-size:26px; font-weight:600; margin:0 0 4px; letter-spacing:-0.01em;}
+  .page-sub{color:var(--secondary); font-size:13.5px; margin:0; max-width:56ch;}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:12px;}
+
+  /* Filters */
+  .filters{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px;}
+  .filter-field{display:flex; flex-direction:column; gap:5px;}
+  .filter-field label{font-size:11px; font-weight:600; color:var(--secondary);}
+  .input{border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:13px; color:var(--text); background:#fff; outline:none;}
+  .input:focus{border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-tint);}
+
+  .btn{display:inline-flex; align-items:center; gap:8px; border:none; cursor:pointer; font-size:13.5px; font-weight:600; border-radius:8px; padding:9px 16px;}
+  .btn-ghost{background:var(--card); color:var(--text); border:1px solid var(--border); align-self:flex-end;}
+  .btn-ghost:hover{border-color:#CBD5E1;}
+
+  /* Head-to-head KPI cards */
+  .h2h-row{display:grid; grid-template-columns:repeat(4, 1fr); gap:16px; margin-bottom:20px;}
+  .h2h{padding:16px 18px;}
+  .h2h-label{font-size:12px; font-weight:600; color:var(--secondary); margin-bottom:12px;}
+  .h2h-sides{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .h2h-side{flex:1;}
+  .h2h-side .tag{display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600; padding:2px 8px; border-radius:100px; margin-bottom:6px;}
+  .tag-propio{background:var(--primary-tint); color:var(--primary);}
+  .tag-externo{background:var(--secondary-tint); color:var(--secondary);}
+  .h2h-value{font-family:var(--font-mono); font-size:19px; font-weight:700;}
+  .h2h-value.winner{color:var(--primary);}
+  .h2h-divider{width:1px; align-self:stretch; background:var(--border);}
+
+  /* Content grid */
+  .content-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:16px; align-items:start; margin-bottom:16px;}
+
+  .panel{padding:20px 22px 22px;}
+  .panel-head{margin-bottom:16px;}
+  .panel-title{font-family:var(--font-display); font-size:16px; font-weight:600; margin:0 0 3px;}
+  .panel-title-sub{font-size:12px; color:var(--secondary); margin:0;}
+
+  .table-scroll{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:13px; min-width:480px;}
+  thead th{text-align:left; font-size:11px; font-weight:600; color:var(--secondary); padding:0 10px 10px; border-bottom:1px solid var(--border); white-space:nowrap;}
+  thead th.num, tbody td.num{text-align:right;}
+  tbody td{padding:11px 10px; border-bottom:1px solid var(--border); vertical-align:middle; white-space:nowrap;}
+  tbody tr:last-child td{border-bottom:none;}
+  .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+  .cell-primary{font-weight:600;}
+  .win-badge{display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--primary); margin-left:7px; vertical-align:middle;}
+
+  .chart-wrap{height:260px; position:relative;}
+
+  /* Zonas recomendación */
+  .zone-row{display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); gap:12px;}
+  .zone-row:last-child{border-bottom:none;}
+  .zone-name{font-size:13.5px; font-weight:600;}
+  .zone-reason{font-size:11.5px; color:var(--secondary); margin-top:2px;}
+  .zone-tag{flex:none;}
+
+  /* Insight callouts */
+  .insight-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .insight-card{padding:18px 20px;}
+  .insight-head{display:flex; align-items:center; gap:9px; margin-bottom:10px;}
+  .insight-icon{width:28px; height:28px; border-radius:7px; display:flex; align-items:center; justify-content:center; flex:none;}
+  .insight-icon.propio{background:var(--primary-tint); color:var(--primary);}
+  .insight-icon.externo{background:var(--secondary-tint); color:var(--secondary);}
+  .insight-title{font-family:var(--font-display); font-size:14.5px; font-weight:600; margin:0;}
+  .insight-list{margin:0; padding-left:18px; font-size:13px; color:var(--text); line-height:1.7;}
+  .insight-list li::marker{color:var(--secondary);}
+
+  @media (max-width: 1180px){
+    .h2h-row{grid-template-columns:repeat(2, 1fr);}
+    .content-grid{grid-template-columns:1fr;}
+    .insight-grid{grid-template-columns:1fr;}
+  }
+  @media (max-width: 860px){
+    .app{flex-direction:column;}
+    .sidebar{width:100%; flex:none; height:auto; position:relative; flex-direction:row; align-items:center; overflow-x:auto; padding:14px 16px;}
+    .brand{padding:0 16px 0 0;}
+    .nav-group-label{display:none;}
+    nav.primary-nav{flex-direction:row; gap:4px;}
+    .nav-item span{display:none;}
+    .sidebar-footer{display:none;}
+    .main{padding:20px 18px 60px;}
+    .h2h-row{grid-template-columns:1fr;}
+  }
+  @media (max-width: 480px){
+    .page-title{font-size:22px;}
+  }
+.toast{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));background:#0F172A;color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;z-index:99;max-width:340px;box-shadow:0 8px 24px #0f172a40}.toast.err{background:#B45309}
+.empty{padding:26px 10px;text-align:center;color:var(--secondary);font-size:13px}
+.btn:disabled{opacity:.6;cursor:not-allowed}a.btn{text-decoration:none}
+@media(max-width:860px){.sidebar-footer{display:flex;margin-left:auto;border:0;padding:0}.sidebar-footer .user-chip{display:none}}
+</style>
+<script src="js/config.js"></script>
+<script src="js/app.js"></script>
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">NF</div>
+      <div>
+        <div class="brand-name">Nexo Flete</div>
+        <div class="brand-sub">Costeo &amp; Logística</div>
+      </div>
+    </div>
+
+    <div class="nav-group-label">Operación</div>
+    <nav class="primary-nav">
+      <a class="nav-item" href="sujumi-dashboard.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span>Panel</span>
+      </a>
+      <a class="nav-item" href="sujumi-registrar-viaje.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l4-9 4 5 3-4 7 8"/></svg>
+        <span>Viajes</span>
+      </a>
+      <a class="nav-item" href="sujumi-comparacion.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+        <span>Comparación</span>
+      </a>
+      <a class="nav-item" href="sujumi-rentabilidad.html">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+        <span>Rentabilidad</span>
+      </a>
+    </nav>
+
+    <div class="nav-group-label">Parámetros</div>
+    <nav class="primary-nav">
+      <a class="nav-item" href="sujumi-tarifas-parametros.html#hora-km">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17V7a2 2 0 0 1 2-2h9l5 5v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2Z"/><path d="M9 21v-6h6v6"/></svg>
+        <span>Tarifas &amp; costos</span>
+      </a>
+      <a class="nav-item" href="sujumi-tarifas-parametros.html#vehiculos">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="9" width="15" height="8" rx="1.5"/><path d="M18 12h2.5l1.5 3v2h-4"/><circle cx="7.5" cy="19" r="1.6"/><circle cx="16.5" cy="19" r="1.6"/></svg>
+        <span>Vehículos</span>
+      </a>
+      <a class="nav-item" href="sujumi-tarifas-parametros.html#transportistas">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3H5a2 2 0 0 0-2 2v14l4-3h9a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2Z"/></svg>
+        <span>Transportistas</span>
+      </a>
+      </nav>
+
+    <div class="sidebar-footer">
+      <a class="nav-item" href="#" id="logout" style="margin-bottom:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg><span>Cerrar sesión</span></a>
+      <div class="user-chip">
+        <div class="user-avatar" id="uAv"></div>
+        <div>
+          <div class="user-name" id="uName"></div>
+          <div class="user-role" id="uRole"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+<div class="topbar"><div><h1 class="page-title">Rentabilidad de pedidos</h1><p class="page-sub">Valor del pedido frente a lo que cuesta prepararlo y transportarlo — independiente del análisis de propio vs. externo</p></div></div>
+<div class="filters"><div class="filter-field"><label>Desde</label><input class="input" type="date" id="desde"></div><div class="filter-field"><label>Hasta</label><input class="input" type="date" id="hasta"></div><div class="filter-field"><label>Sacador / auxiliar</label><select class="input" id="sac"><option value="">Todos</option></select></div><button class="btn btn-ghost" id="go">Filtrar</button></div>
+<div class="kpi-row" id="kpis"></div>
+<div class="content-grid">
+<section class="card panel"><div class="panel-head"><div><h2 class="panel-title">Pedidos del periodo</h2><p class="panel-title-sub">Valor, costo de preparación, costo de flete y margen neto</p></div></div>
+<div class="table-scroll"><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Participantes</th><th class="num">Valor</th><th class="num">Preparación</th><th class="num">Flete</th><th class="num">Margen neto</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<section class="card panel"><div class="panel-head"><div><h2 class="panel-title">Por sacador / auxiliar</h2><p class="panel-title-sub">Valor de pedidos movido por hora vs. costo hora-hombre</p></div></div>
+<div class="table-scroll"><table><thead><tr><th>Nombre</th><th>Rol</th><th class="num">Pedidos</th><th class="num">Horas</th><th class="num">Valor / hora</th><th class="num">Costo / hora</th><th class="num">Diferencia</th></tr></thead><tbody id="rowsSac"></tbody></table></div></section>
+</div>
+</main>
+<script>
+(async()=>{const S=window.S;if(!S)return;S.init();const {api,esc,money,toast}=S,$=id=>document.getElementById(id);
+const d=S.today();$('hasta').value=d;$('desde').value=d.slice(0,8)+'01';
+const nombre=p=>(p||[]).join(', ')||'—';
+const kpi=(l,v,sub)=>`<div class="card kpi"><div class="kpi-top"><span class="kpi-label">${l}</span></div><div class="kpi-value">${v}</div><span class="kpi-delta"><span class="kpi-delta-context">${sub}</span></span></div>`;
+async function load(){
+  const q=`?desde=${$('desde').value}&hasta=${$('hasta').value}${$('sac').value?'&sacador='+encodeURIComponent($('sac').value):''}`;
+  $('rows').innerHTML='<tr><td colspan="7" class="empty">Cargando…</td></tr>';
+  try{
+    const [peds,sacs]=await Promise.all([api('/rentabilidad-pedidos'+q),api('/rentabilidad-pedidos/por-sacador'+q.split('&sacador')[0])]);
+    if(!$('sac').options.length||$('sac').options.length===1){
+      const nombres=[...new Set(sacs.map(s=>s.sacador))].sort();
+      $('sac').innerHTML='<option value="">Todos</option>'+nombres.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    }
+    const totVal=peds.reduce((s,p)=>s+Number(p.valor_venta||0),0);
+    const totMargen=peds.reduce((s,p)=>s+Number(p.margen_neto||0),0);
+    const sinCosto=peds.filter(p=>p.participantes_sin_costo>0).length;
+    $('kpis').innerHTML=kpi('Pedidos en el periodo',peds.length,'Con flete ya asignado')
+      +kpi('Valor total',money(totVal),'Suma de monto_final')
+      +kpi('Margen neto total',money(totMargen),totVal>0?`${(totMargen/totVal*100).toFixed(1)}% del valor`:'—')
+      +kpi('Con participantes sin costo',sinCosto,'Faltan en la tabla personal');
+    $('rows').innerHTML=peds.map(p=>`<tr><td class="cell-order">${esc(p.pedido_id)}</td><td>${esc(p.cliente||'—')}</td><td class="cell-sub">${esc(nombre(p.participantes))}</td><td class="mono num">${money(p.valor_venta)}</td><td class="mono num">${money(p.costo_preparacion)}</td><td class="mono num">${money(p.costo_flete)}</td><td class="mono num ${Number(p.margen_neto)<0?'delta-bad':'delta-good'}">${money(p.margen_neto)}</td></tr>`).join('')||'<tr><td colspan="7" class="empty">No hay pedidos con flete asignado en este periodo</td></tr>';
+    $('rowsSac').innerHTML=sacs.map(s=>{const vh=s.horas>0?s.valor_movido/s.horas:null,dif=vh!==null?vh-s.costo_hora:null;
+      return `<tr><td class="cell-primary">${esc(s.sacador)}</td><td>${esc(s.rol||'Sin rol')}</td><td class="mono num">${s.pedidos}</td><td class="mono num">${Number(s.horas).toFixed(1)}</td><td class="mono num">${vh===null?'—':money(vh)}</td><td class="mono num">${money(s.costo_hora)}</td><td class="mono num ${dif===null?'':dif<0?'delta-bad':'delta-good'}">${dif===null?'—':money(dif)}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Sin datos de preparación en este periodo</td></tr>';
+  }catch(e){toast(e.message,'err');$('rows').innerHTML=`<tr><td colspan="7" class="empty">${esc(e.message)}</td></tr>`}
+}
+$('go').onclick=load;load();
+})();
+</script>
+</body></html>
