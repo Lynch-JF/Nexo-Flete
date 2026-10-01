@@ -41,6 +41,9 @@ h1{font:600 26px var(--fd);margin:0 0 4px;letter-spacing:-.01em}
 .chipbtn:hover{border-color:#CBD5E1}.chipbtn.on{background:var(--primary);border-color:var(--primary);color:#fff}
 .btn{border:none;cursor:pointer;font-size:13.5px;font-weight:600;border-radius:8px;padding:9px 18px;background:var(--primary);color:#fff}
 .btn:hover{background:#115E59}
+.btn:disabled{opacity:.6;cursor:wait}
+.btn.sec{background:#fff;color:var(--primary);border:1px solid var(--primary)}
+.btn.sec:hover{background:var(--tint)}
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
 .kpi{padding:16px 18px;border-top:3px solid var(--primary)}
 .kpi:nth-child(2){border-top-color:#0EA5E9}.kpi:nth-child(3){border-top-color:#94A3B8}.kpi:nth-child(4){border-top-color:#16A34A}
@@ -108,6 +111,7 @@ tfoot td{border-bottom:none;border-top:2px solid var(--border);font-weight:700;b
       <div class="field"><label for="hasta">Hasta</label><input class="input" type="date" id="hasta"></div>
       <div class="field"><label for="sac">Sacador / auxiliar</label><select class="input" id="sac"><option value="">Todos</option></select></div>
       <button class="btn" id="go">Filtrar</button>
+      <button class="btn sec" id="sync" title="Trae de HidenCustomer los pedidos del rango seleccionado">Sincronizar con HidenCustomer</button>
       <div class="chips" id="chips">
         <button class="chipbtn" data-r="hoy">Hoy</button>
         <button class="chipbtn" data-r="sem">Últimos 7 días</button>
@@ -201,6 +205,17 @@ async function load(){
     $('rows').innerHTML=`<tr><td colspan="8" class="empty">${esc(e.message)}</td></tr>`;
   }
 }
+
+$('sync').onclick=async()=>{
+  const b=$('sync'),txt=b.textContent;
+  b.disabled=true;b.textContent='Sincronizando…';
+  try{
+    const r=await api('/pedidos/sincronizar',{method:'POST',body:JSON.stringify({desde:$('desde').value,hasta:$('hasta').value})});
+    toast(`${r.sincronizados} de ${r.recibidos} pedidos sincronizados`+(r.fallidos&&r.fallidos.length?` · ${r.fallidos.length} con error`:''));
+    await load();
+  }catch(e){toast(e.message,'err')}
+  finally{b.disabled=false;b.textContent=txt}
+};
 
 setRange('mes');
 $('go').onclick=load;
