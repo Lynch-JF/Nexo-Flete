@@ -191,7 +191,7 @@ async function load(){
     $('sac').innerHTML='<option value="">Todos</option>'+nombres.map(n=>`<option value="${esc(n)}"${n===sel?' selected':''}>${esc(n)}</option>`).join('');
     $('rowsSac').innerHTML=sacs.map(s=>{
       const h=Number(s.horas),vh=h>0?Number(s.valor_movido)/h:null,dif=vh!==null?vh-Number(s.costo_hora):null;
-      return `<tr><td class="b">${esc(s.sacador)}</td><td>${esc(s.rol||'Sin rol')}</td><td class="n mono">${s.pedidos}</td><td class="n mono">${h.toFixed(1)}</td>
+      return `<tr${Number(s.pedidos)===0?' style="opacity:.55"':''}><td class="b">${esc(s.sacador)}</td><td>${esc(s.rol||'Sin rol')}</td><td class="n mono">${s.pedidos}</td><td class="n mono">${h.toFixed(1)}</td>
         <td class="n mono">${vh===null?'—':money(vh)}</td><td class="n mono">${money(s.costo_hora)}</td>
         <td class="n mono ${dif===null?'':dif<0?'bad':'good'}">${dif===null?'—':money(dif)}</td></tr>`}).join('')
       ||'<tr><td colspan="7" class="empty">Sin datos de preparación en este periodo</td></tr>';
