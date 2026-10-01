@@ -210,7 +210,7 @@ $('sync').onclick=async()=>{
   const b=$('sync'),txt=b.textContent;
   b.disabled=true;b.textContent='Sincronizando…';
   try{
-    const r=await api('/pedidos/sincronizar',{method:'POST',body:JSON.stringify({desde:$('desde').value,hasta:$('hasta').value})});
+    const r=await api('/pedidos/sincronizar',{method:'POST',body:{desde:$('desde').value,hasta:$('hasta').value}});
     toast(`${r.sincronizados} de ${r.recibidos} pedidos sincronizados`+(r.fallidos&&r.fallidos.length?` · ${r.fallidos.length} con error`:''));
     await load();
   }catch(e){toast(e.message,'err')}
