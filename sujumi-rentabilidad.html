@@ -277,22 +277,24 @@ async function load(){
   const q=`?desde=${$('desde').value}&hasta=${$('hasta').value}${$('sac').value?'&sacador='+encodeURIComponent($('sac').value):''}`;
   $('rows').innerHTML='<tr><td colspan="7" class="empty">Cargando…</td></tr>';
   try{
-    const [peds,sacs]=await Promise.all([api('/rentabilida  d-pedidos'+q),api('/rentabilidad-pedidos/por-sacador'+q.split('&sacador')[0])]);
+    const [peds,sacs]=await Promise.all([api('/rentabilidad-pedidos'+q),api('/rentabilidad-pedidos/por-sacador'+q.split('&sacador')[0])]);
     if(!$('sac').options.length||$('sac').options.length===1){
       const nombres=[...new Set(sacs.map(s=>s.sacador))].sort();
       $('sac').innerHTML='<option value="">Todos</option>'+nombres.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
     }
-    const conFlete=peds.filter(p=>p.flete_asignado);
-const totVal=peds.reduce((s,p)=>s+Number(p.valor_venta||0),0);
-const valConFlete=conFlete.reduce((s,p)=>s+Number(p.valor_venta||0),0);
-const totMargen=conFlete.reduce((s,p)=>s+Number(p.margen_neto||0),0);
-const sinCosto=peds.filter(p=>p.participantes_sin_costo>0).length;
-$('kpis').innerHTML=kpi('Pedidos en el periodo',peds.length,`${conFlete.length} con flete asignado`)
-  +kpi('Valor total',money(totVal),'Suma de monto_final')
-  +kpi('Margen neto total',money(totMargen),valConFlete>0?`${(totMargen/valConFlete*100).toFixed(1)}% del valor (solo con flete)`:'—')
-  +kpi('Con participantes sin costo',sinCosto,'Faltan en la tabla personal');
-$('rows').innerHTML=peds.map(p=>{const f=p.flete_asignado,pend='<span style="color:var(--secondary)">Pendiente</span>';
-  return `<tr><td class="cell-order">${esc(p.pedido_id)}</td><td>${esc(p.cliente||'—')}</td><td class="cell-sub">${esc(nombre(p.participantes))}</td><td class="mono num">${money(p.valor_venta)}</td><td class="mono num">${money(p.costo_preparacion)}</td><td class="mono num">${f?money(p.costo_flete):pend}</td><td class="mono num ${!f?'':Number(p.margen_neto)<0?'delta-bad':'delta-good'}">${f?money(p.margen_neto):'—'}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No hay pedidos en este periodo</td></tr>';
+    const totVal=peds.reduce((s,p)=>s+Number(p.valor_venta||0),0);
+    const totMargen=peds.reduce((s,p)=>s+Number(p.margen_neto||0),0);
+    const sinFlete=peds.filter(p=>!p.flete_asignado).length;
+    const sinCosto=peds.filter(p=>p.participantes_sin_costo>0).length;
+    $('kpis').innerHTML=kpi('Pedidos sacados',peds.length,sinFlete?`${sinFlete} sin flete asignado`:'Todos con flete asignado')
+      +kpi('Valor total',money(totVal),'Suma de monto_final')
+      +kpi('Margen total',money(totMargen),totVal>0?`${(totMargen/totVal*100).toFixed(1)}% del valor${sinFlete?' (sin flete en '+sinFlete+')':''}`:'—')
+      +kpi('Con participantes sin costo',sinCosto,'Faltan en la tabla personal');
+    $('rows').innerHTML=peds.map(p=>{const f=p.flete_asignado;
+      return `<tr><td class="cell-order">${esc(p.pedido_id)}</td><td>${esc(p.cliente||'—')}</td><td class="cell-sub">${esc(nombre(p.participantes))}</td><td class="mono num">${money(p.valor_venta)}</td><td class="mono num">${money(p.costo_preparacion)}</td><td class="mono num">${f?money(p.costo_flete):'<span style="color:var(--secondary)">—</span>'}</td><td class="mono num ${Number(p.margen_neto)<0?'delta-bad':'delta-good'}">${money(p.margen_neto)}${f?'':'<div style="font-size:10.5px;color:var(--secondary);font-weight:500">sin flete</div>'}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">No hay pedidos sacados en este periodo</td></tr>';
+    $('rowsSac').innerHTML=sacs.map(s=>{const vh=s.horas>0?s.valor_movido/s.horas:null,dif=vh!==null?vh-s.costo_hora:null;
+      return `<tr><td class="cell-primary">${esc(s.sacador)}</td><td>${esc(s.rol||'Sin rol')}</td><td class="mono num">${s.pedidos}</td><td class="mono num">${Number(s.horas).toFixed(1)}</td><td class="mono num">${vh===null?'—':money(vh)}</td><td class="mono num">${money(s.costo_hora)}</td><td class="mono num ${dif===null?'':dif<0?'delta-bad':'delta-good'}">${dif===null?'—':money(dif)}</td></tr>`}).join('')||'<tr><td colspan="7" class="empty">Sin datos de preparación en este periodo</td></tr>';
+  }catch(e){toast(e.message,'err');$('rows').innerHTML=`<tr><td colspan="7" class="empty">${esc(e.message)}</td></tr>`}
 }
 $('go').onclick=load;load();
 })();
