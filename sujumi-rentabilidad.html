@@ -124,8 +124,8 @@ tfoot td{border-bottom:none;border-top:2px solid var(--border);font-weight:700;b
           <div><h2 class="pt">Pedidos sacados</h2><p class="pts" id="cnt">Valor, preparación, flete y margen por pedido</p></div>
           <input class="input search" id="q" type="search" placeholder="Buscar pedido, cliente o persona">
         </div>
-        <div class="ts"><table style="min-width:760px"><thead><tr><th>Pedido</th><th>Cliente</th><th>Participantes</th><th class="n">Valor</th><th class="n">Preparación</th><th class="n">Flete</th><th class="n">Margen</th></tr></thead><tbody id="rows"></tbody><tfoot id="foot"></tfoot></table></div>
-        <p class="note">El margen es valor − preparación − flete. Si el pedido aún no tiene flete asignado, se muestra sin flete.</p>
+        <div class="ts"><table style="min-width:760px"><thead><tr><th>Pedido</th><th>Cliente</th><th>Participantes</th><th class="n">Venta</th><th class="n">Mercancía</th><th class="n">Preparación</th><th class="n">Flete</th><th class="n">Margen</th></tr></thead><tbody id="rows"></tbody><tfoot id="foot"></tfoot></table></div>
+        <p class="note">Margen = venta − costo de mercancía − preparación − flete. “Sin dato” indica un pedido sin costo de mercancía cargado: su margen sale inflado. “Pendiente” es un flete aún no asignado.</p>
       </section>
 
       <section class="card panel">
@@ -158,29 +158,29 @@ function render(){
   const t=$('q').value.trim().toLowerCase();
   const list=!t?peds:peds.filter(p=>[p.pedido_id,p.cliente,...(p.participantes||[])].join(' ').toLowerCase().includes(t));
   const sum=k=>list.reduce((s,p)=>s+Number(p[k]||0),0);
-  const val=sum('valor_venta'),prep=sum('costo_preparacion'),mar=sum('margen_neto'),flete=sum('costo_flete');
+  const val=sum('valor_venta'),prep=sum('costo_preparacion'),mar=sum('margen_neto'),flete=sum('costo_flete'),merc=sum('costo_mercancia'),sinMerc=list.filter(p=>p.sin_costo_mercancia).length,logi=prep+flete;
   const sinFlete=list.filter(p=>!p.flete_asignado).length,sinCosto=list.filter(p=>p.participantes_sin_costo>0).length;
   $('kpis').innerHTML=
     kpi('Pedidos sacados',list.length,sinFlete?`${sinFlete} sin flete asignado`:'Todos con flete asignado')
-   +kpi('Valor total',money(val),'Suma de monto_final')
-   +kpi('Costo de preparación',money(prep),pct(prep,val)+' del valor')
-   +kpi('Margen',money(mar),pct(mar,val)+' del valor'+(sinFlete?' · sin flete en '+sinFlete:''));
+   +kpi('Venta total',money(val),'Costo de mercancía '+money(merc))
+   +kpi('Costo logístico',money(logi),pct(logi,val)+' de la venta · '+pct(logi,val-merc)+' del margen bruto')
+   +kpi('Margen después de logística',money(mar),pct(mar,val)+' de la venta'+(sinMerc?' · '+sinMerc+' sin costo de mercancía':''));
   $('cnt').textContent=list.length+(list.length===1?' pedido':' pedidos')+' entre '+$('desde').value+' y '+$('hasta').value+(sinCosto?' · '+sinCosto+' con participantes sin costo':'');
   $('rows').innerHTML=list.map(p=>{
     const f=p.flete_asignado,m=Number(p.margen_neto||0),v=Number(p.valor_venta||0),w=v>0?Math.max(0,Math.min(100,m/v*100)):0;
     return `<tr><td class="b mono">${esc(p.pedido_id)}</td><td>${esc(p.cliente||'—')}</td>
       <td>${(p.participantes||[]).map(n=>`<span class="chip">${esc(n)}</span>`).join('')||'—'}</td>
-      <td class="n mono">${money(v)}</td><td class="n mono">${money(p.costo_preparacion)}</td>
+      <td class="n mono">${money(v)}</td><td class="n mono">${p.sin_costo_mercancia?'<span class="pill">Sin dato</span>':money(p.costo_mercancia)}</td><td class="n mono">${money(p.costo_preparacion)}</td>
       <td class="n mono">${f?money(p.costo_flete):'<span class="pill">Pendiente</span>'}</td>
-      <td class="n mono ${m<0?'bad':'good'}">${money(m)}<div class="bar"><i style="width:${w}%"></i></div></td></tr>`}).join('')
-    ||'<tr><td colspan="7" class="empty">No hay pedidos sacados en este periodo</td></tr>';
-  $('foot').innerHTML=list.length?`<tr><td colspan="3">Total (${list.length})</td><td class="n mono">${money(val)}</td><td class="n mono">${money(prep)}</td><td class="n mono">${money(flete)}</td><td class="n mono">${money(mar)}</td></tr>`:'';
+      <td class="n mono ${m<0?'bad':'good'}">${money(m)}<div style="font-size:11px;color:var(--sec);font-weight:500">${pct(m,v)}</div><div class="bar"><i style="width:${w}%"></i></div></td></tr>`}).join('')
+    ||'<tr><td colspan="8" class="empty">No hay pedidos sacados en este periodo</td></tr>';
+  $('foot').innerHTML=list.length?`<tr><td colspan="3">Total (${list.length})</td><td class="n mono">${money(val)}</td><td class="n mono">${money(merc)}</td><td class="n mono">${money(prep)}</td><td class="n mono">${money(flete)}</td><td class="n mono">${money(mar)}</td></tr>`:'';
 }
 
 async function load(){
   const sel=$('sac').value;
   const base=`?desde=${$('desde').value}&hasta=${$('hasta').value}`;
-  $('rows').innerHTML='<tr><td colspan="7" class="empty">Cargando…</td></tr>';
+  $('rows').innerHTML='<tr><td colspan="8" class="empty">Cargando…</td></tr>';
   try{
     const [p,sacs]=await Promise.all([
       api('/rentabilidad-pedidos'+base+(sel?'&sacador='+encodeURIComponent(sel):'')),
@@ -198,7 +198,7 @@ async function load(){
     render();
   }catch(e){
     toast(e.message,'err');
-    $('rows').innerHTML=`<tr><td colspan="7" class="empty">${esc(e.message)}</td></tr>`;
+    $('rows').innerHTML=`<tr><td colspan="8" class="empty">${esc(e.message)}</td></tr>`;
   }
 }
 
