@@ -76,7 +76,8 @@ tfoot td{border-bottom:none;border-top:2px solid var(--border);font-weight:700;b
 @media(max-width:860px){.app{flex-direction:column}.sidebar{width:100%;flex:none;height:auto;position:relative;flex-direction:row;align-items:center;overflow-x:auto;padding:14px 16px}.brand{padding:0 16px 0 0}.nav-group-label{display:none}nav.primary-nav{flex-direction:row;gap:4px}.nav-item span{display:none}.sidebar-footer{display:flex;margin-left:auto;border:0;padding:0}.sidebar-footer .user-chip{display:none}.main{padding:20px 16px 60px}}
 @media(max-width:520px){.kpis{grid-template-columns:1fr}h1{font-size:22px}}
 /* Desglose de un pedido */
-#rows tr[data-id]{cursor:pointer}
+#rows tr[data-id],#rowsSac tr[data-sac],#dw tr[data-id]{cursor:pointer}
+.dw-back{border:none;background:none;color:var(--primary);font-weight:600;font-size:13px;cursor:pointer;padding:0;margin-bottom:10px}
 .ov{position:fixed;inset:0;background:#0F172A66;display:none;justify-content:flex-end;z-index:50}
 .ov.on{display:flex}
 .dw{width:min(560px,100%);height:100%;overflow:auto;background:var(--bg);padding:22px 22px 40px;box-shadow:-12px 0 32px #0F172A26}
@@ -147,7 +148,7 @@ tfoot td{border-bottom:none;border-top:2px solid var(--border);font-weight:700;b
       </section>
 
       <section class="card panel">
-        <div class="ph"><div><h2 class="pt">Por sacador / auxiliar</h2><p class="pts">Valor movido por hora frente a lo que cuesta su hora</p></div></div>
+        <div class="ph"><div><h2 class="pt">Por sacador / auxiliar</h2><p class="pts">Valor movido por hora frente a lo que cuesta su hora · clic en una persona para ver sus pedidos</p></div></div>
         <div class="ts"><table style="min-width:620px"><thead><tr><th>Nombre</th><th>Rol</th><th class="n">Pedidos</th><th class="n">Horas</th><th class="n">Valor / hora</th><th class="n">Costo / hora</th><th class="n">Diferencia</th></tr></thead><tbody id="rowsSac"></tbody></table></div>
       </section>
     </div>
@@ -210,7 +211,7 @@ async function load(){
     $('sac').innerHTML='<option value="">Todos</option>'+nombres.map(n=>`<option value="${esc(n)}"${n===sel?' selected':''}>${esc(n)}</option>`).join('');
     $('rowsSac').innerHTML=sacs.map(s=>{
       const h=Number(s.horas),vh=h>0?Number(s.valor_movido)/h:null,dif=vh!==null?vh-Number(s.costo_hora):null;
-      return `<tr${Number(s.pedidos)===0?' style="opacity:.55"':''}><td class="b">${esc(s.sacador)}</td><td>${esc(s.rol||'Sin rol')}</td><td class="n mono">${s.pedidos}</td><td class="n mono">${h.toFixed(1)}</td>
+      return `<tr data-sac="${esc(s.sacador)}" title="Ver desglose"${Number(s.pedidos)===0?' style="opacity:.55"':''}><td class="b">${esc(s.sacador)}</td><td>${esc(s.rol||'Sin rol')}</td><td class="n mono">${s.pedidos}</td><td class="n mono">${h.toFixed(1)}</td>
         <td class="n mono">${vh===null?'—':money(vh)}</td><td class="n mono">${money(s.costo_hora)}</td>
         <td class="n mono ${dif===null?'':dif<0?'bad':'good'}">${dif===null?'—':money(dif)}</td></tr>`}).join('')
       ||'<tr><td colspan="7" class="empty">Sin datos de preparación en este periodo</td></tr>';
@@ -238,14 +239,16 @@ const hr=h=>{if(!h)return'—';const d=new Date(h);return isNaN(d)?String(h).sli
 const nm=v=>String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
 const MET={bultos:'por bultos',peso:'por peso',volumen:'por volumen',entregas:'en partes iguales',km:'en partes iguales (km)',tiempo:'en partes iguales (tiempo)'};
 let dSeq=0;
-async function desglose(id){
-  const my=++dSeq;
+let volverA=null; // sacador desde el que se abrió el pedido
+async function desglose(id,desde){
+  const my=++dSeq;volverA=desde||null;
   $('dw').innerHTML='<div class="empty">Cargando…</div>';$('ov').classList.add('on');
   let d;try{d=await api('/pedidos/'+encodeURIComponent(id)+'/rentabilidad')}catch(e){if(my===dSeq)$('dw').innerHTML=`<div class="empty">${esc(e.message)}</div>`;return}
   if(my!==dSeq)return; // se abrió otro pedido mientras cargaba
   const v=+d.valor_venta||0,sm=d.sin_costo_mercancia,mb=sm?null:+d.margen_bruto,prep=+d.costo_preparacion||0,fl=+d.costo_flete||0,lg=prep+fl,mn=sm?null:+d.margen_post_logistica;
   const P=d.preparacion||[],V=d.viajes||[];
   $('dw').innerHTML=`
+  ${volverA?`<button class="dw-back" id="dwBack">← ${esc(volverA)}</button>`:''}
   <div class="dw-h"><div><h1 style="font-size:22px">Pedido ${esc(d.pedido_id)}</h1><p class="sub" style="margin:0">${esc(d.cliente||'Sin cliente')} · ${S.fdate(d.fecha)}${d.vendedor?' · Vendedor: '+esc(d.vendedor):''}${d.zona?' · '+esc(d.zona):''} · ${d.bultos??'—'} bultos</p></div><button class="dw-x" id="dwx" title="Cerrar">✕</button></div>
   <div class="card"><h3>Resultado</h3>
     ${ln('Venta',money(v))}
@@ -264,11 +267,37 @@ async function desglose(id){
     ${ln('Reparto','1 de '+x.pedidos_en_viaje+' pedidos','',`Repartido ${MET[x.metodo_asignacion]||esc(x.metodo_asignacion||'')}${x.metodo_asignacion==='bultos'&&x.bultos_viaje?` · ${x.bultos_pedido} de ${x.bultos_viaje} bultos`:''}`)}
     ${ln('Asignado a este pedido',x.costo_asignado==null?'<span class="pill">Pendiente</span>':money(x.costo_asignado),'t',x.proporcion_pct!=null?x.proporcion_pct+'% del viaje':'')}</div>`}).join(''):'<div class="sm">Este pedido todavía no va en ningún viaje cerrado.</div>'}</div>`;
   $('dwx').onclick=cerrarDesglose;
+  if(volverA){const v=volverA;$('dwBack').onclick=()=>desgloseSacador(v)}
+}
+
+// ---- Desglose de un sacador / auxiliar ----
+async function desgloseSacador(nombre){
+  const my=++dSeq;
+  $('dw').innerHTML='<div class="empty">Cargando…</div>';$('ov').classList.add('on');
+  const q=`?sacador=${encodeURIComponent(nombre)}&desde=${$('desde').value}&hasta=${$('hasta').value}`;
+  let L;try{L=await api('/rentabilidad-pedidos/por-sacador/detalle'+q)}catch(e){if(my===dSeq)$('dw').innerHTML=`<div class="empty">${esc(e.message)}</div>`;return}
+  if(my!==dSeq)return;
+  const s=k=>L.reduce((a,x)=>a+(+x[k]||0),0),h=s('horas'),c=s('costo'),vm=s('valor_movido'),ped=new Set(L.map(x=>x.pedido_id)).size;
+  const ch=h>0?c/h:null,vh=h>0?vm/h:null,sc=L.filter(x=>x.sin_costo).length,rol=(L.find(x=>x.rol)||{}).rol;
+  const alias=[...new Set(L.map(x=>x.nombre_hidencustomer).filter(n=>nm(n)!==nm(nombre)))];
+  $('dw').innerHTML=`
+  <div class="dw-h"><div><h1 style="font-size:22px">${esc(nombre)}</h1><p class="sub" style="margin:0">${esc(rol||'Sin rol')} · ${S.fdate($('desde').value)} al ${S.fdate($('hasta').value)}${alias.length?`<br>También llega como: ${alias.map(a=>'“'+esc(a)+'”').join(', ')}`:''}</p></div><button class="dw-x" id="dwx" title="Cerrar">✕</button></div>
+  <div class="card"><h3>Resumen</h3>
+    ${ln('Pedidos preparados',ped,'',L.length!==ped?L.length+' tramos de trabajo':'')}
+    ${ln('Horas trabajadas',h.toFixed(2)+' h','',ped?(h/ped*60).toFixed(0)+' min promedio por pedido':'')}
+    ${ln('Costo de su tiempo',money(c),'',ch!=null?money(ch)+' por hora'+(sc?` · ${sc} tramo${sc===1?'':'s'} sin costo`:''):'')}
+    ${ln('Valor movido',money(vm),'','Venta de cada pedido según su parte del tiempo')}
+    ${ln('Valor movido por hora',vh==null?'—':money(vh),'t',vh!=null&&ch?`${(vh/ch).toFixed(1)} veces su costo por hora · diferencia ${money(vh-ch)}/h`:'')}
+  </div>
+  <div class="card"><h3>Pedidos</h3>${L.length?`<table><thead><tr><th>Pedido</th><th>Horario</th><th class="n">Horas</th><th class="n">Costo</th><th class="n">Valor movido</th></tr></thead><tbody>${L.map(x=>`<tr data-id="${esc(x.pedido_id)}" title="Ver desglose del pedido"><td><b class="mono">${esc(x.pedido_id)}</b><div class="sm">${S.fdate(x.fecha)} · ${esc(x.cliente||'—')}${+x.participantes>1?` · ${x.participantes} personas, ${x.parte_tiempo_pct}% del tiempo`:''}</div></td><td class="mono">${hr(x.hora_inicio)}–${hr(x.hora_fin)}</td><td class="n mono">${(+x.horas).toFixed(2)}</td><td class="n mono">${x.sin_costo?'<span class="pill">Sin costo</span>':money(x.costo)}</td><td class="n mono">${money(x.valor_movido)}<div class="sm">de ${money(x.valor_venta)}</div></td></tr>`).join('')}</tbody><tfoot><tr><td colspan="2">Total</td><td class="n mono">${h.toFixed(2)}</td><td class="n mono">${money(c)}</td><td class="n mono">${money(vm)}</td></tr></tfoot></table>`:'<div class="sm">No preparó pedidos en este periodo.</div>'}</div>`;
+  $('dwx').onclick=cerrarDesglose;
+  $('dw').querySelector('tbody')?.addEventListener('click',e=>{const tr=e.target.closest('tr[data-id]');if(tr)desglose(tr.dataset.id,nombre)});
 }
 const cerrarDesglose=()=>{dSeq++;$('ov').classList.remove('on')};
 $('ov').onclick=e=>{if(e.target===$('ov'))cerrarDesglose()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarDesglose()});
 $('rows').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(tr)desglose(tr.dataset.id)};
+$('rowsSac').onclick=e=>{const tr=e.target.closest('tr[data-sac]');if(tr)desgloseSacador(tr.dataset.sac)};
 
 setRange('mes');
 $('go').onclick=load;
