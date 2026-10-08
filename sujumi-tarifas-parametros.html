@@ -294,8 +294,8 @@ async function render(){
     try{
       if(cur==='transportistas'){
         if(fd.transportista_id==='new'){if(!(fd.nuevo||'').trim())throw new Error('Escribe el nombre del transportista');fd.transportista_id=(await api('/transportistas',{method:'POST',body:{nombre:fd.nuevo.trim()}})).id}
-        fd.transportista_id=+fd.transportista_id;fd.zona_id=fd.zona_id===''?null:+fd.zona_id}
-      if(cur==='personal')fd.rol_laboral_id=+fd.rol_laboral_id;delete fd.nuevo;if(!fd.vigente_desde)delete fd.vigente_desde;await api(d.p,{method:'POST',body:{...fd,...(d.x||{})}});toast('Nueva vigencia guardada');render();
+        fd.zona_id=fd.zona_id===''?null:fd.zona_id}
+      delete fd.nuevo;if(!fd.vigente_desde)delete fd.vigente_desde;await api(d.p,{method:'POST',body:{...fd,...(d.x||{})}});toast('Nueva vigencia guardada');render();
     }catch(er){toast(er.message,'err');b.disabled=false}};
 }
 document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{location.hash=b.dataset.tab});

@@ -360,12 +360,12 @@ function calc(){
   clearTimeout(tmr);tmr=setTimeout(estimar,300);
 }
 async function estimar(){
-  const my=++seq,body={fecha:$('fecha').value,zona_id:+$('zona').value||null,modalidad:mode,metodo_asignacion:$('met').value,
+  const my=++seq,body={fecha:$('fecha').value,zona_id:$('zona').value||null,modalidad:mode,metodo_asignacion:$('met').value,
     pedidos:peds.map(p=>({pedido_id:p.id,bultos:p.bultos,peso_kg:p.peso||null,volumen_m3:p.vol||null})),
     hora_salida:$('hs').value||null,hora_regreso:$('hr').value||null,km_recorridos:n('km'),combustible_costo:n('comb'),
     peajes:n('peajes'),viaticos:n('viat'),horas_extra:n('hext')};
-  if(mode==='propio'){body.vehiculo_id=+$('veh').value||null;body.chofer_id=+$('chof').value||null;body.ayudante_id=+$('ayud').value||null}
-  else{body.transportista_id=+$('trans').value||null;body.tarifa_modalidad=$('tmod').value}
+  if(mode==='propio'){body.vehiculo_id=$('veh').value||null;body.chofer_id=$('chof').value||null;body.ayudante_id=$('ayud').value||null}
+  else{body.transportista_id=$('trans').value||null;body.tarifa_modalidad=$('tmod').value}
   let r;try{r=await api('/viajes/estimar',{method:'POST',body})}catch(e){if(my===seq){$('sumRows').innerHTML=`<div class="summary-row"><span class="label">${esc(e.message)}</span></div>`;$('sumTot').textContent='—'}return}
   if(my!==seq)return;
   const d=r.detalle||{},rows=mode==='propio'?[
@@ -399,8 +399,8 @@ async function save(close){
   if(mode==='externo'&&!$('trans').value)return toast('Selecciona un transportista','err');
   const bs=[$('bReg'),$('bDraft')];bs.forEach(b=>b.disabled=true);let v;
   try{
-    const body={fecha:$('fecha').value,zona_id:+$('zona').value,modalidad:mode,metodo_asignacion:$('met').value};
-    if(mode==='propio'){body.vehiculo_id=+$('veh').value;if($('chof').value)body.chofer_id=+$('chof').value;if($('ayud').value)body.ayudante_id=+$('ayud').value}else{body.transportista_id=+$('trans').value;body.tarifa_modalidad=$('tmod').value}
+    const body={fecha:$('fecha').value,zona_id:$('zona').value,modalidad:mode,metodo_asignacion:$('met').value};
+    if(mode==='propio'){body.vehiculo_id=$('veh').value;if($('chof').value)body.chofer_id=$('chof').value;if($('ayud').value)body.ayudante_id=$('ayud').value}else{body.transportista_id=$('trans').value;body.tarifa_modalidad=$('tmod').value}
     v=await api('/viajes',{method:'POST',body});
     for(const p of peds)await api(`/viajes/${v.id}/pedidos`,{method:'POST',body:{pedido_id:p.id,bultos:p.bultos,peso_kg:p.peso||null,volumen_m3:p.vol||null}});
     if(close){const r=await api(`/viajes/${v.id}/cerrar`,{method:'PATCH',body:{hora_salida:$('hs').value||null,hora_regreso:$('hr').value||null,km_recorridos:n('km'),combustible_costo:n('comb'),peajes:n('peajes'),viaticos:n('viat'),horas_extra:n('hext'),tiempo_preparacion_min:n('prep')||null,incidencias:$('inc').value||null,metodo_asignacion:$('met').value}});
