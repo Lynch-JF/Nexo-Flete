@@ -75,6 +75,20 @@ tfoot td{border-bottom:none;border-top:2px solid var(--border);font-weight:700;b
 @media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.chips{margin-left:0}}
 @media(max-width:860px){.app{flex-direction:column}.sidebar{width:100%;flex:none;height:auto;position:relative;flex-direction:row;align-items:center;overflow-x:auto;padding:14px 16px}.brand{padding:0 16px 0 0}.nav-group-label{display:none}nav.primary-nav{flex-direction:row;gap:4px}.nav-item span{display:none}.sidebar-footer{display:flex;margin-left:auto;border:0;padding:0}.sidebar-footer .user-chip{display:none}.main{padding:20px 16px 60px}}
 @media(max-width:520px){.kpis{grid-template-columns:1fr}h1{font-size:22px}}
+/* Desglose de un pedido */
+#rows tr[data-id]{cursor:pointer}
+.ov{position:fixed;inset:0;background:#0F172A66;display:none;justify-content:flex-end;z-index:50}
+.ov.on{display:flex}
+.dw{width:min(560px,100%);height:100%;overflow:auto;background:var(--bg);padding:22px 22px 40px;box-shadow:-12px 0 32px #0F172A26}
+.dw-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+.dw-x{border:1px solid var(--border);background:#fff;border-radius:8px;width:34px;height:34px;cursor:pointer;font-size:16px;color:var(--sec);flex:none}
+.dw .card{padding:16px 18px;margin-bottom:12px}
+.dw h3{font:600 14px var(--fd);margin:0 0 10px}
+.ln{display:flex;justify-content:space-between;gap:12px;padding:6px 0;font-size:13px;border-bottom:1px dashed var(--border)}
+.ln:last-child{border-bottom:none}.ln .l{color:var(--sec)}.ln.t{font-weight:700;border-top:2px solid var(--border);border-bottom:none;margin-top:4px;padding-top:9px}
+.ln.t .l{color:var(--text)}
+.sm{font-size:11.5px;color:var(--sec);margin-top:2px;white-space:normal}
+.dw table{width:100%;border-collapse:collapse;font-size:12.5px}.dw td,.dw th{padding:7px 6px}
 </style>
 <script src="js/config.js"></script>
 <script src="js/app.js"></script>
@@ -138,6 +152,7 @@ tfoot td{border-bottom:none;border-top:2px solid var(--border);font-weight:700;b
       </section>
     </div>
   </main>
+<div class="ov" id="ov"><div class="dw" id="dw"></div></div>
 </div>
 
 <script>
@@ -169,10 +184,10 @@ function render(){
    +kpi('Venta total',money(val),'Costo de mercancía '+money(merc))
    +kpi('Costo logístico',money(logi),pct(logi,val)+' de la venta · '+pct(logi,val-merc)+' del margen bruto')
    +kpi('Margen después de logística',money(mar),pct(mar,val)+' de la venta'+(sinMerc?' · '+sinMerc+' sin costo de mercancía':''));
-  $('cnt').textContent=list.length+(list.length===1?' pedido':' pedidos')+' entre '+$('desde').value+' y '+$('hasta').value+(sinCosto?' · '+sinCosto+' con participantes sin costo':'');
+  $('cnt').textContent=list.length+(list.length===1?' pedido':' pedidos')+' entre '+$('desde').value+' y '+$('hasta').value+(sinCosto?' · '+sinCosto+' con participantes sin costo':'')+(list.length?' · clic en un pedido para ver su desglose':'');
   $('rows').innerHTML=list.map(p=>{
     const f=p.flete_asignado,m=Number(p.margen_neto||0),v=Number(p.valor_venta||0),w=v>0?Math.max(0,Math.min(100,m/v*100)):0;
-    return `<tr><td class="b mono">${esc(p.pedido_id)}</td><td>${esc(p.cliente||'—')}</td>
+    return `<tr data-id="${esc(p.pedido_id)}" title="Ver desglose"><td class="b mono">${esc(p.pedido_id)}</td><td>${esc(p.cliente||'—')}</td>
       <td>${(p.participantes||[]).map(n=>`<span class="chip">${esc(n)}</span>`).join('')||'—'}</td>
       <td class="n mono">${money(v)}</td><td class="n mono">${p.sin_costo_mercancia?'<span class="pill">Sin dato</span>':money(p.costo_mercancia)}</td><td class="n mono">${money(p.costo_preparacion)}</td>
       <td class="n mono">${f?money(p.costo_flete):'<span class="pill">Pendiente</span>'}</td>
@@ -216,6 +231,44 @@ $('sync').onclick=async()=>{
   }catch(e){toast(e.message,'err')}
   finally{b.disabled=false;b.textContent=txt}
 };
+
+// ---- Desglose de un pedido ----
+const ln=(l,v,cls,sub)=>`<div class="ln ${cls||''}"><span class="l">${l}${sub?`<div class="sm">${sub}</div>`:''}</span><span class="mono">${v}</span></div>`;
+const hr=h=>{if(!h)return'—';const d=new Date(h);return isNaN(d)?String(h).slice(0,5):d.toLocaleTimeString('es-DO',{hour:'2-digit',minute:'2-digit'})};
+const nm=v=>String(v||'').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ');
+const MET={bultos:'por bultos',peso:'por peso',volumen:'por volumen',entregas:'en partes iguales',km:'en partes iguales (km)',tiempo:'en partes iguales (tiempo)'};
+let dSeq=0;
+async function desglose(id){
+  const my=++dSeq;
+  $('dw').innerHTML='<div class="empty">Cargando…</div>';$('ov').classList.add('on');
+  let d;try{d=await api('/pedidos/'+encodeURIComponent(id)+'/rentabilidad')}catch(e){if(my===dSeq)$('dw').innerHTML=`<div class="empty">${esc(e.message)}</div>`;return}
+  if(my!==dSeq)return; // se abrió otro pedido mientras cargaba
+  const v=+d.valor_venta||0,sm=d.sin_costo_mercancia,mb=sm?null:+d.margen_bruto,prep=+d.costo_preparacion||0,fl=+d.costo_flete||0,lg=prep+fl,mn=sm?null:+d.margen_post_logistica;
+  const P=d.preparacion||[],V=d.viajes||[];
+  $('dw').innerHTML=`
+  <div class="dw-h"><div><h1 style="font-size:22px">Pedido ${esc(d.pedido_id)}</h1><p class="sub" style="margin:0">${esc(d.cliente||'Sin cliente')} · ${S.fdate(d.fecha)}${d.vendedor?' · Vendedor: '+esc(d.vendedor):''}${d.zona?' · '+esc(d.zona):''} · ${d.bultos??'—'} bultos</p></div><button class="dw-x" id="dwx" title="Cerrar">✕</button></div>
+  <div class="card"><h3>Resultado</h3>
+    ${ln('Venta',money(v))}
+    ${ln('Costo de mercancía',sm?'<span class="pill">Sin dato</span>':'− '+money(d.costo_mercancia))}
+    ${ln('Margen bruto',mb==null?'—':money(mb),'',mb==null?'':pct(mb,v)+' de la venta')}
+    ${ln('Preparación',(prep?'− ':'')+money(prep),'',P.length+' participante'+(P.length===1?'':'s')+' · '+(+d.horas_hombre||P.reduce((s,x)=>s+(+x.horas||0),0)).toFixed(2)+' h')}
+    ${ln('Flete',d.flete_asignado?'− '+money(fl):'<span class="pill">Pendiente</span>','',V.length?V.length+' viaje'+(V.length===1?'':'s'):'Sin viaje cerrado')}
+    ${ln('Costo logístico',money(lg),'',[pct(lg,v)+' de la venta',mb>0?pct(lg,mb)+' del margen bruto':'',d.bultos>0?money(lg/d.bultos)+' por bulto':''].filter(Boolean).join(' · '))}
+    ${ln('Margen después de logística',mn==null?'—':`<span class="${mn<0?'bad':'good'}">${money(mn)}</span>`,'t',mn==null?'Falta el costo de mercancía':pct(mn,v)+' de la venta')}
+  </div>
+  <div class="card"><h3>Preparación</h3>${P.length?`<table><thead><tr><th>Persona</th><th>Horario</th><th class="n">Horas</th><th class="n">Costo/h</th><th class="n">Costo</th></tr></thead><tbody>${P.map(x=>`<tr><td>${esc(x.sacador)}<div class="sm">${esc(x.rol||'Sin rol')}${x.nombre_hidencustomer&&nm(x.nombre_hidencustomer)!==nm(x.sacador)?' · llega como “'+esc(x.nombre_hidencustomer)+'”':''}</div></td><td class="mono">${hr(x.hora_inicio)}–${hr(x.hora_fin)}</td><td class="n mono">${(+x.horas).toFixed(2)}</td><td class="n mono">${x.sin_costo?'<span class="pill">Sin costo</span>':money(x.costo_hora)}</td><td class="n mono">${money(x.costo)}</td></tr>`).join('')}</tbody></table>`:'<div class="sm">Sin preparación registrada</div>'}</div>
+  <div class="card"><h3>Flete</h3>${V.length?V.map(x=>{const ext=x.modalidad==='externo',h=S.hours(String(x.hora_salida||'').slice(0,5),String(x.hora_regreso||'').slice(0,5));return `
+    <div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:4px"><b style="font-size:13px">${S.fdate(x.fecha)} · ${esc(x.zona||'Sin zona')}</b><span class="chip">${ext?'Externo':'Propio'}${x.estado!=='cerrado'?' · '+esc(x.estado):''}</span></div>
+    <div class="sm" style="margin-bottom:6px">${ext?esc(x.transportista||'Transportista'):[x.vehiculo,x.chofer&&'Chofer: '+x.chofer,x.ayudante&&'Ayudante: '+x.ayudante].filter(Boolean).map(esc).join(' · ')}${x.km!=null?' · '+x.km+' km':''}${h?' · '+h.toFixed(1)+' h':''}</div>
+    ${ln('Costo del viaje',money(x.costo_viaje),'',[x.costo_estandar!=null?'Estándar '+money(x.costo_estandar):'',x.combustible?'Combustible '+money(x.combustible):'',x.peajes?'Peajes '+money(x.peajes):'',x.viaticos?'Viáticos '+money(x.viaticos):''].filter(Boolean).join(' · '))}
+    ${ln('Reparto','1 de '+x.pedidos_en_viaje+' pedidos','',`Repartido ${MET[x.metodo_asignacion]||esc(x.metodo_asignacion||'')}${x.metodo_asignacion==='bultos'&&x.bultos_viaje?` · ${x.bultos_pedido} de ${x.bultos_viaje} bultos`:''}`)}
+    ${ln('Asignado a este pedido',x.costo_asignado==null?'<span class="pill">Pendiente</span>':money(x.costo_asignado),'t',x.proporcion_pct!=null?x.proporcion_pct+'% del viaje':'')}</div>`}).join(''):'<div class="sm">Este pedido todavía no va en ningún viaje cerrado.</div>'}</div>`;
+  $('dwx').onclick=cerrarDesglose;
+}
+const cerrarDesglose=()=>{dSeq++;$('ov').classList.remove('on')};
+$('ov').onclick=e=>{if(e.target===$('ov'))cerrarDesglose()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarDesglose()});
+$('rows').onclick=e=>{const tr=e.target.closest('tr[data-id]');if(tr)desglose(tr.dataset.id)};
 
 setRange('mes');
 $('go').onclick=load;
