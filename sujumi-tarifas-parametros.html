@@ -237,7 +237,7 @@
 
   <main class="main">
 <div class="topbar"><div><h1 class="page-title">Tarifas &amp; Parámetros</h1><p class="page-sub">Datos estables que alimentan el cálculo del costo. Cada cambio queda registrado con fecha de vigencia — el histórico nunca se modifica.</p></div></div>
-<div class="tabs" id="tabs"><button class="tab-btn" data-tab="hora-km">Costo por hora / km</button><button class="tab-btn" data-tab="vehiculos">Vehículos</button><button class="tab-btn" data-tab="transportistas">Transportistas externos</button><button class="tab-btn" data-tab="salarios">Salarios &amp; cargas laborales</button><button class="tab-btn" data-tab="zonas">Zonas &amp; rutas</button><button class="tab-btn" data-tab="personal">Personal</button><button class="tab-btn" data-tab="usuarios">Usuarios</button></div><div id="view"></div></main>
+<div class="tabs" id="tabs"><button class="tab-btn" data-tab="hora-km">Costo por hora / km</button><button class="tab-btn" data-tab="vehiculos">Vehículos</button><button class="tab-btn" data-tab="transportistas">Transportistas externos</button><button class="tab-btn" data-tab="salarios">Salarios &amp; cargas laborales</button><button class="tab-btn" data-tab="zonas">Zonas &amp; rutas</button><button class="tab-btn" data-tab="personal">Personal</button><button class="tab-btn" data-tab="alias">Nombres alternos</button><button class="tab-btn" data-tab="usuarios">Usuarios</button></div><div id="view"></div></main>
 
 </div>
 
@@ -250,7 +250,7 @@ const adm=S.user&&S.user.rol==='admin_costeo';
 if(!adm)document.querySelector('[data-tab="usuarios"]').remove();
 const MOD={por_viaje:'Por viaje',por_bulto:'Por bulto',por_zona:'Por zona',por_peso:'Por peso',por_volumen:'Por volumen',especial:'Tarifa especial'};
 const TIPO={km:'Costo por km (sin combustible)',hora:'Otros costos por hora',hora_extra:'Recargo por hora extra',galon:'Precio del galón de combustible'};
-let Z=[],TR=[],RL=[],cur=(location.hash||'#hora-km').slice(1);
+let Z=[],TR=[],RL=[],PE=[],cur=(location.hash||'#hora-km').slice(1);
 const zn=id=>id==null?'Todas':(Z.find(z=>z.id==id)||{nombre:'#'+id}).nombre,tn=id=>(TR.find(t=>t.id==id)||{nombre:'#'+id}).nombre;
 const mins=m=>{m=+m;return m>=60?`${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}min`:m+'min'};
 const N=v=>`<td class="mono">${money(v)}</td>`,P=s=>`<td class="cell-primary">${s}</td>`;
@@ -260,6 +260,7 @@ const T={
 'transportistas':{p:'/tarifas-transportista',h:['Transportista','Modalidad','Tarifa','Zona'],c:r=>[P(esc(tn(r.transportista_id))),`<td>${MOD[r.modalidad]||esc(r.modalidad)}</td>`,N(r.valor),`<td>${esc(zn(r.zona_id))}</td>`],f:{t:'Nueva tarifa de transportista',fl:[['transportista_id','Transportista','select',()=>[...TR.map(t=>[t.id,t.nombre]),['new','+ Nuevo transportista']]],['nuevo','Nombre del nuevo transportista','text'],['modalidad','Modalidad','select',Object.entries(MOD)],['zona_id','Zona','select',()=>[['','Todas las zonas'],...Z.map(z=>[z.id,z.nombre])]],['valor','Tarifa','num','RD$']]}},
 'salarios':{p:'/roles-laborales',h:['Rol','Salario mensual','Cargas laborales','Costo hora-hombre'],c:r=>[P(esc(r.rol)),N(r.salario_mensual),`<td class="mono">${+r.cargas_laborales_pct}%</td>`,N(r.costo_hora_hombre)],f:{t:'Nuevo valor de rol',fl:[['rol','Rol','text'],['salario_mensual','Salario mensual','num','RD$'],['cargas_laborales_pct','Cargas laborales','num','%']]}},
 'personal':{p:'/personal',nv:1,h:['Nombre','Rol','Estado'],c:r=>[P(esc(r.nombre)),`<td>${esc(r.rol||'—')}</td>`,`<td><span class="status-pill status-${r.activo?'vigente':'historico'}">${r.activo?'Activo':'Inactivo'}</span></td>`],f:{t:'Nuevo empleado',fl:[['nombre','Nombre','text'],['rol_laboral_id','Rol','select',()=>RL.map(r=>[r.id,r.rol])]]}},
+'alias':{p:'/personal/alias',nv:1,h:['Nombre como llega de HidenCustomer','Se cuenta como'],c:r=>[P(esc(r.alias)),`<td>${esc(r.nombre)}</td>`],f:{t:'Nuevo nombre alterno',fl:[['alias','Nombre alterno (como lo escribe HidenCustomer)','text'],['nombre','Es la misma persona que','select',()=>PE.map(p=>[p.nombre,p.nombre])]]}},
 'usuarios':{p:'/usuarios',nv:1,h:['Usuario','Rol','Estado','Acciones'],c:r=>{const me=r.id==S.user.id,bs='style="padding:5px 10px;font-size:12px"';return [P(esc(r.usuario)+(me?'<span class="cell-sub">Tú</span>':'')),
  `<td>${me?'Administrador':`<select class="input" data-rol="${r.id}" style="padding:5px 8px;width:auto"><option value="admin_costeo"${r.rol==='admin_costeo'?' selected':''}>Administrador</option><option value="operador"${r.rol==='operador'?' selected':''}>Operador</option></select>`}</td>`,
  `<td><span class="status-pill status-${r.activo?'vigente':'historico'}">${r.activo?'Activo':'Inactivo'}</span></td>`,
@@ -276,11 +277,11 @@ async function render(){
   if(!T[cur])cur='hora-km';const d=T[cur];
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===cur));
   $('view').innerHTML='<div class="empty">Cargando…</div>';
-  let rows;try{[Z,TR,RL]=await Promise.all([api('/zonas'),api('/transportistas?incluirInactivos=1'),api('/roles-laborales').catch(()=>[])]);rows=d.nv?await api(d.p+'?incluirInactivos=1'):await api(d.p+'/historial').catch(()=>api(d.p))}catch(e){$('view').innerHTML=`<div class="empty">${esc(e.message)}</div>`;return}
+  let rows;try{[Z,TR,RL,PE]=await Promise.all([api('/zonas'),api('/transportistas?incluirInactivos=1'),api('/roles-laborales').catch(()=>[]),api('/personal').catch(()=>[])]);rows=d.nv?await api(d.p+'?incluirInactivos=1'):await api(d.p+'/historial').catch(()=>api(d.p))}catch(e){$('view').innerHTML=`<div class="empty">${esc(e.message)}</div>`;return}
   const td=S.today(),f=d.f;
   const body=rows.map(r=>{const v=!r.vigente_hasta,pr=v&&String(r.vigente_desde).slice(0,10)>td,s=pr?'programado':v?'vigente':'historico';
     return `<tr class="${v?'':'row-muted'}">${d.c(r).join('')}${d.nv?'':`<td class="mono">${S.fdate(r.vigente_desde)}</td><td><span class="status-pill status-${s}">${pr?'Programado':v?'Vigente':'Histórico'}</span></td>`}</tr>`}).join('')||'<tr><td colspan="9" class="empty">Sin registros</td></tr>';
-  const form=adm?`<aside class="card panel side-panel"><h3 class="side-title">${f.t}</h3><p class="side-sub">${d.nv?'':'La vigencia inicia hoy o en la fecha que indiques; el valor anterior se cierra automáticamente y el histórico no se modifica.'}${cur==='hora-km'?'<br><br>El costo por hora del chofer, el ayudante y el vehículo se calcula solo con sus salarios y costos mensuales. Aquí van los costos adicionales: por km sin combustible (llantas, desgaste), otros por hora, el recargo por hora extra y el precio del galón (para estimar el combustible si no se informa el real).':''}</p><form id="frm">${[...f.fl,...(d.nv?[]:[['vigente_desde','Vigente desde (opcional)','date']])].map(fld).join('')}<button class="btn btn-primary btn-block" style="margin-top:8px">Guardar</button></form></aside>`:`<aside class="card panel side-panel"><h3 class="side-title">Solo lectura</h3><p class="side-sub">Únicamente el rol admin_costeo puede modificar parámetros.</p></aside>`;
+  const form=adm?`<aside class="card panel side-panel"><h3 class="side-title">${f.t}</h3><p class="side-sub">${cur==='alias'?'Si HidenCustomer escribe a una persona de otra forma (ej. sin el segundo nombre), regístralo aquí para que sus horas y su costo se sumen a la misma persona.':d.nv?'':'La vigencia inicia hoy o en la fecha que indiques; el valor anterior se cierra automáticamente y el histórico no se modifica.'}${cur==='hora-km'?'<br><br>El costo por hora del chofer, el ayudante y el vehículo se calcula solo con sus salarios y costos mensuales. Aquí van los costos adicionales: por km sin combustible (llantas, desgaste), otros por hora, el recargo por hora extra y el precio del galón (para estimar el combustible si no se informa el real).':''}</p><form id="frm">${[...f.fl,...(d.nv?[]:[['vigente_desde','Vigente desde (opcional)','date']])].map(fld).join('')}<button class="btn btn-primary btn-block" style="margin-top:8px">Guardar</button></form></aside>`:`<aside class="card panel side-panel"><h3 class="side-title">Solo lectura</h3><p class="side-sub">Únicamente el rol admin_costeo puede modificar parámetros.</p></aside>`;
   $('view').innerHTML=`<div class="layout"><section class="card panel"><div class="table-scroll"><table><thead><tr>${(d.nv?d.h:[...d.h,'Vigente desde','Estado']).map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div></section>${form}</div>`;
   if(cur==='usuarios'){const v=$('view'),pt=async(id,b,m)=>{try{await api('/usuarios/'+id,{method:'PATCH',body:b});toast(m)}catch(e){toast(e.message,'err')}render()};
     v.onclick=e=>{const a=e.target.closest('[data-act]'),p=e.target.closest('[data-pw]');
@@ -295,7 +296,7 @@ async function render(){
       if(cur==='transportistas'){
         if(fd.transportista_id==='new'){if(!(fd.nuevo||'').trim())throw new Error('Escribe el nombre del transportista');fd.transportista_id=(await api('/transportistas',{method:'POST',body:{nombre:fd.nuevo.trim()}})).id}
         fd.zona_id=fd.zona_id===''?null:fd.zona_id}
-      delete fd.nuevo;if(!fd.vigente_desde)delete fd.vigente_desde;await api(d.p,{method:'POST',body:{...fd,...(d.x||{})}});toast('Nueva vigencia guardada');render();
+      delete fd.nuevo;if(!fd.vigente_desde)delete fd.vigente_desde;await api(d.p,{method:'POST',body:{...fd,...(d.x||{})}});toast(d.nv?'Guardado':'Nueva vigencia guardada');render();
     }catch(er){toast(er.message,'err');b.disabled=false}};
 }
 document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=()=>{location.hash=b.dataset.tab});
