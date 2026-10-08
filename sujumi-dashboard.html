@@ -494,18 +494,20 @@ async function load(){
     const [r,ry,vs,cp]=await Promise.all([api('/dashboard/resumen?fecha='+d),api('/dashboard/resumen?fecha='+y),api('/viajes?fecha='+d),api(`/comparacion?desde=${m}&hasta=${d}`)]);
     const zn=id=>(Z.find(z=>z.id==id)||{}).nombre||'Zona #'+id;
     const ct=+r.costo_total,cy=+ry.costo_total,pct=cy>0?(ct-cy)/cy*100:null;
-    const mg=+r.ingreso_total>0?+r.margen_post_logistica_total/+r.ingreso_total*100:null;
+    // Margen solo sobre los pedidos con costo de mercancía (si no, saldría inflado).
+    const ib=r.ingreso_con_costo_mercancia!=null?+r.ingreso_con_costo_mercancia:+r.ingreso_total,sc=+r.pedidos_sin_costo_mercancia||0;
+    const mg=ib>0?+r.margen_post_logistica_total/ib*100:null;
     const open=vs.filter(v=>v.estado!=='cerrado').length;
     $('kpis').innerHTML=kpi('Costo total del día','c',money(ct),pct===null?'<span class="kpi-delta-context">Sin datos de ayer</span>':`${pct>0?'▲':'▼'} ${Math.abs(pct).toFixed(1)}% <span class="kpi-delta-context">vs. ayer</span>`,pct>0?'up':'down')
      +kpi('Pedidos costeados','b',r.pedidos_costeados,`${open} <span class="kpi-delta-context">viajes pendientes de cierre</span>`,'down')
      +kpi('Costo promedio / pedido','t',money(r.promedio_por_pedido),'<span class="kpi-delta-context">Promedio del día</span>')
-     +kpi('Margen post-logística','k',mg===null?'—':mg.toFixed(1)+'%',`<span class="kpi-delta-context">${mg===null?'Sin ingresos cargados':'sobre '+money(r.ingreso_total)}</span>`);
+     +kpi('Margen post-logística','k',mg===null?'—':mg.toFixed(1)+'%',`<span class="kpi-delta-context">${mg===null?(sc?'Pedidos sin costo de mercancía':'Sin ingresos cargados'):'sobre '+money(ib)+(sc?` · ${sc} sin costo de mercancía`:'')}</span>`);
     $('rows').innerHTML=vs.map(v=>{const e=v.costo_estandar,c=v.costo_real,df=(e!=null&&c!=null)?c-e:null;
       return `<tr><td><span class="cell-order">Viaje #${v.id}</span><span class="cell-sub">${esc(zn(v.zona_id))}</span></td><td>${tag(v.modalidad)}</td><td class="mono">${money(e)}</td><td class="mono">${money(c)}</td><td class="mono ${df===null?'':df>0?'delta-bad':'delta-good'}">${df===null?'—':(df>0?'+':'−')+money(Math.abs(df))}</td><td>${esc(v.estado)}</td></tr>`}).join('')||'<tr><td colspan="6" class="empty">No hay viajes registrados para esta fecha</td></tr>';
     const g=b=>cp.find(x=>!!x.es_externo===b)||{viajes:0,costo_total:0,costo_promedio:0};const a=g(false),b=g(true);
     $('cmpSub').textContent=`Del ${S.fdate(m)} al ${S.fdate(d)} · viajes cerrados`;
     const row=(l,x,y)=>`<div class="compare-row"><span class="compare-label">${l}</span><div class="compare-values"><span class="compare-propio">${x}</span><span class="vs-divider">vs</span><span class="compare-externo">${y}</span></div></div>`;
-    $('cmp').innerHTML=row('Viajes',a.viajes,b.viajes)+row('Costo total',money(a.costo_total),money(b.costo_total))+row('Costo promedio / viaje',money(a.costo_promedio),money(b.costo_promedio));
+    $('cmp').innerHTML=row('Viajes',a.viajes,b.viajes)+row('Costo total',money(a.costo_total),money(b.costo_total))+row('Costo promedio / viaje',money(a.costo_promedio),money(b.costo_promedio))+row('Costo / pedido',a.costo_por_pedido!=null?money(a.costo_por_pedido):'—',b.costo_por_pedido!=null?money(b.costo_por_pedido):'—')+row('Costo / bulto',a.costo_por_bulto!=null?money(a.costo_por_bulto):'—',b.costo_por_bulto!=null?money(b.costo_por_bulto):'—');
     const al=vs.filter(v=>+v.costo_estandar>0&&+v.costo_real>+v.costo_estandar);
     $('alerts').innerHTML=al.map(v=>`<div class="alert-item"><span class="alert-dot"></span><div><div class="alert-title">Viaje #${v.id} — ${((v.costo_real/v.costo_estandar-1)*100).toFixed(1)}% sobre estándar</div><div class="alert-desc">Real ${money(v.costo_real)} vs. estándar ${money(v.costo_estandar)} · ${esc(zn(v.zona_id))}</div></div></div>`).join('')||'<div class="empty">Sin desviaciones para esta fecha</div>';
   }catch(e){toast(e.message,'err');$('rows').innerHTML=`<tr><td colspan="6" class="empty">${esc(e.message)}</td></tr>`}

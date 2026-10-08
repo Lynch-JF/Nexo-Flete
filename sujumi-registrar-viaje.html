@@ -318,12 +318,12 @@
 <section class="card section"><div class="section-head"><h2 class="section-title"><span class="section-num">2</span>Pedidos incluidos en la ruta</h2><p class="section-sub">El costo del viaje se distribuye entre estos pedidos según el método elegido</p></div>
 <table class="assigned-table"><thead><tr><th>Pedido</th><th>Cliente</th><th>Bultos</th><th></th></tr></thead><tbody id="ped"></tbody></table>
 <div class="add-order-row"><input class="input" id="pcode" type="text" placeholder="Código del pedido (ej. PED-10432)"><button type="button" class="btn btn-ghost btn-sm" id="padd">+ Agregar</button></div>
-<div class="field" style="margin-top:14px"><label>Método de asignación</label><select class="input" id="met"><option value="bultos">Por bultos</option><option value="peso">Por peso</option><option value="volumen">Por volumen</option><option value="entregas">Por entregas (equitativo)</option><option value="km">Por km</option><option value="tiempo">Por tiempo</option></select></div></section>
+<div class="field" style="margin-top:14px"><label>Método de asignación</label><select class="input" id="met"><option value="bultos">Por bultos</option><option value="peso">Por peso</option><option value="volumen">Por volumen</option><option value="entregas">Por entregas (equitativo)</option><option value="km">Por km (equitativo: no hay km por pedido)</option><option value="tiempo">Por tiempo (equitativo)</option></select></div></section>
 <section class="card section"><div class="section-head"><h2 class="section-title"><span class="section-num">3</span>Datos reales del viaje</h2><p class="section-sub">Lo que ocurrió realmente en ruta</p></div>
 <div class="field-grid">
 <div class="field"><label>Hora de salida</label><input class="input" type="time" id="hs"></div>
 <div class="field"><label>Hora de regreso</label><input class="input" type="time" id="hr"></div>
-<div class="field"><label>Kilómetros recorridos</label><div class="input-suffix-wrap"><input class="input" id="km" type="number" step="any" min="0" ><span class="input-suffix">km</span></div></div><div class="field"><label>Combustible consumido</label><div class="input-suffix-wrap"><input class="input" id="comb" type="number" step="any" min="0" ><span class="input-suffix">RD$</span></div></div><div class="field"><label>Peajes</label><div class="input-suffix-wrap"><input class="input" id="peajes" type="number" step="any" min="0" ><span class="input-suffix">RD$</span></div></div><div class="field"><label>Viáticos</label><div class="input-suffix-wrap"><input class="input" id="viat" type="number" step="any" min="0" ><span class="input-suffix">RD$</span></div></div><div class="field"><label>Horas extras</label><div class="input-suffix-wrap"><input class="input" id="hext" type="number" step="any" min="0" ><span class="input-suffix">hrs</span></div></div><div class="field"><label>Tiempo de preparación del pedido</label><div class="input-suffix-wrap"><input class="input" id="prep" type="number" step="any" min="0" ><span class="input-suffix">min</span></div></div>
+<div class="field"><label>Kilómetros recorridos</label><div class="input-suffix-wrap"><input class="input" id="km" type="number" step="any" min="0" ><span class="input-suffix">km</span></div></div><div class="field"><label>Combustible consumido <span style="font-weight:400;opacity:.7">(vacío = se estima)</span></label><div class="input-suffix-wrap"><input class="input" id="comb" type="number" step="any" min="0" ><span class="input-suffix">RD$</span></div></div><div class="field"><label>Peajes</label><div class="input-suffix-wrap"><input class="input" id="peajes" type="number" step="any" min="0" ><span class="input-suffix">RD$</span></div></div><div class="field"><label>Viáticos</label><div class="input-suffix-wrap"><input class="input" id="viat" type="number" step="any" min="0" ><span class="input-suffix">RD$</span></div></div><div class="field"><label>Horas extras</label><div class="input-suffix-wrap"><input class="input" id="hext" type="number" step="any" min="0" ><span class="input-suffix">hrs</span></div></div><div class="field"><label>Tiempo de preparación del pedido</label><div class="input-suffix-wrap"><input class="input" id="prep" type="number" step="any" min="0" ><span class="input-suffix">min</span></div></div>
 <div class="field full"><label>Incidencias <span class="hint">(opcional)</span></label><textarea class="input" id="inc" placeholder="Ej. Retraso por tráfico, devolución parcial, avería del vehículo…"></textarea></div>
 </div></section></div>
 <aside class="summary-panel card section"><h3 class="summary-title">Resumen del costo</h3><p class="summary-sub">Calculado con los datos ingresados y las tarifas vigentes</p>
@@ -353,14 +353,34 @@ try{
 }catch(e){toast(e.message,'err')}
 const tarifa=()=>{const t=tf.filter(x=>x.transportista_id==$('trans').value&&x.modalidad===$('tmod').value);return t.find(x=>x.zona_id==$('zona').value)||t.find(x=>x.zona_id==null)};
 const n=id=>+$(id).value||0;
+// Vista previa: el cálculo lo hace el servidor (POST /viajes/estimar), el mismo que al cerrar el viaje.
+let tmr,seq=0;
 function calc(){
-  const hrs=S.hours($('hs').value,$('hr').value);let rows,base=0;
-  if(mode==='propio'){rows=[[`Horas trabajadas (${hrs.toFixed(1)} h)`,hrs*(costos.hora||0)],[`Kilometraje (${n('km')} km)`,n('km')*(costos.km||0)],['Horas extra',n('hext')*(costos.hora_extra||0)],['Combustible',n('comb')]]}
-  else{const t=tarifa(),v=t?+t.valor:0,m=$('tmod').value;$('tarifa').value=t?v.toFixed(2):'Sin tarifa vigente';
-    base=m==='por_bulto'?v*peds.reduce((s,p)=>s+p.bultos,0):m==='por_peso'?v*peds.reduce((s,p)=>s+p.peso,0):m==='por_volumen'?v*peds.reduce((s,p)=>s+p.vol,0):v;rows=[['Tarifa del transportista',base]]}
-  rows.push(['Peajes',n('peajes')],['Viáticos',n('viat')]);
-  $('sumRows').innerHTML=rows.map(r=>`<div class="summary-row"><span class="label">${r[0]}</span><span class="value">${money(r[1])}</span></div>`).join('');
-  $('sumTot').textContent=money(rows.reduce((s,r)=>s+r[1],0));
+  if(mode==='externo'){const t=tarifa();$('tarifa').value=t?(+t.valor).toFixed(2):'Sin tarifa vigente'}
+  clearTimeout(tmr);tmr=setTimeout(estimar,300);
+}
+async function estimar(){
+  const my=++seq,body={fecha:$('fecha').value,zona_id:+$('zona').value||null,modalidad:mode,metodo_asignacion:$('met').value,
+    pedidos:peds.map(p=>({pedido_id:p.id,bultos:p.bultos,peso_kg:p.peso||null,volumen_m3:p.vol||null})),
+    hora_salida:$('hs').value||null,hora_regreso:$('hr').value||null,km_recorridos:n('km'),combustible_costo:n('comb'),
+    peajes:n('peajes'),viaticos:n('viat'),horas_extra:n('hext')};
+  if(mode==='propio'){body.vehiculo_id=+$('veh').value||null;body.chofer_id=+$('chof').value||null;body.ayudante_id=+$('ayud').value||null}
+  else{body.transportista_id=+$('trans').value||null;body.tarifa_modalidad=$('tmod').value}
+  let r;try{r=await api('/viajes/estimar',{method:'POST',body})}catch(e){if(my===seq){$('sumRows').innerHTML=`<div class="summary-row"><span class="label">${esc(e.message)}</span></div>`;$('sumTot').textContent='—'}return}
+  if(my!==seq)return;
+  const d=r.detalle||{},rows=mode==='propio'?[
+    [`Mano de obra (${(+d.horas||0).toFixed(1)} h)`,d.mano_obra],
+    ['Vehículo (depreciación, seguro, mantenimiento)',d.vehiculo],
+    ...(+d.otros_por_hora?[['Otros costos por hora',d.otros_por_hora]]:[]),
+    [`Kilometraje (${+d.km||0} km × ${money(d.costo_km)})`,d.por_km],
+    ['Recargo horas extra',d.recargo_horas_extra],
+    ['Combustible'+(d.combustible_estimado?' (estimado)':''),d.combustible]
+  ]:[[`Tarifa del transportista${d.tarifa_modalidad?' · '+d.tarifa_modalidad.replace('_',' '):''}`,d.tarifa]];
+  rows.push(['Peajes',d.peajes],['Viáticos',d.viaticos]);
+  if(r.costo_estandar!=null)rows.push(['Costo estándar (referencia)',r.costo_estandar,1]);
+  $('sumRows').innerHTML=rows.map(x=>`<div class="summary-row"${x[2]?' style="opacity:.7"':''}><span class="label">${x[0]}</span><span class="value">${money(x[1])}</span></div>`).join('')
+    +(r.avisos||[]).map(a=>`<div class="summary-row" style="color:var(--warning,#b45309);font-size:12px"><span class="label">⚠ ${esc(a)}</span></div>`).join('');
+  $('sumTot').textContent=money(r.costo);
 }
 function drawPeds(){$('ped').innerHTML=peds.map((p,i)=>`<tr><td class="mono">${esc(p.id)}</td><td>${esc(p.cliente)}</td><td class="mono">${p.bultos}</td><td><button type="button" class="remove-btn" title="Quitar" data-i="${i}">✕</button></td></tr>`).join('')||'<tr><td colspan="4" class="empty">Aún no hay pedidos en la ruta</td></tr>';calc()}
 $('ped').onclick=e=>{const b=e.target.closest('[data-i]');if(b){peds.splice(+b.dataset.i,1);drawPeds()}};
@@ -384,7 +404,7 @@ async function save(close){
     v=await api('/viajes',{method:'POST',body});
     for(const p of peds)await api(`/viajes/${v.id}/pedidos`,{method:'POST',body:{pedido_id:p.id,bultos:p.bultos,peso_kg:p.peso||null,volumen_m3:p.vol||null}});
     if(close){const r=await api(`/viajes/${v.id}/cerrar`,{method:'PATCH',body:{hora_salida:$('hs').value||null,hora_regreso:$('hr').value||null,km_recorridos:n('km'),combustible_costo:n('comb'),peajes:n('peajes'),viaticos:n('viat'),horas_extra:n('hext'),tiempo_preparacion_min:n('prep')||null,incidencias:$('inc').value||null,metodo_asignacion:$('met').value}});
-      toast(`Viaje #${v.id} cerrado · costo real ${money(r.costo_real)}`+(v.costo_estandar!=null?` (estándar ${money(v.costo_estandar)})`:''))}
+      toast(`Viaje #${v.id} cerrado · costo real ${money(r.costo_real)}`+(r.costo_estandar!=null?` (estándar ${money(r.costo_estandar)})`:''))}
     else toast(`Borrador guardado como viaje #${v.id} (planificado)`);
     setTimeout(()=>location.href='sujumi-dashboard.html',1600);
   }catch(e){toast((v?`Viaje #${v.id} creado pero falló: `:'')+e.message,'err');bs.forEach(b=>b.disabled=false)}
